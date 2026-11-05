@@ -113,3 +113,22 @@ jobs:
         run: |
           grep "Overall Sign-off Status: 100% PASS" val/drc/density_summary.rpt || { echo "Density check failed!"; exit 1; }
           echo "Density check: 100% PASS verified."
+
+  klayout-physical-verification:
+    name: Live KLayout GDS Physical Verification (DRC, Density, Sealring, Pins)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install KLayout
+        shell: bash
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y klayout
+
+      - name: Run KLayout Verification Suite on Live GDS
+        shell: bash
+        run: |
+          klayout -b -r scripts/run_klayout_verification.py
+
