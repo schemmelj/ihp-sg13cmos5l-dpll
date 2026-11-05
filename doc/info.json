@@ -16,19 +16,24 @@
   "metal_stack": "4 thin metals (M1-M4) + 1 thick TopMetal1 (TM1, 2.0 um)",
   "dependencies": {
     "DCO": {
-      "type": "15-coarse + 8-fine Vernier ring oscillator"
+      "type": "15-coarse + 8-fine Vernier ring oscillator",
+      "dependencies": {}
     },
     "TDC": {
-      "type": "256-stage Flash Inverter Delay-Line (39.5 ps LSB)"
+      "type": "256-stage Flash Inverter Delay-Line (39.5 ps LSB)",
+      "dependencies": {}
     },
     "LOOP_FILTER": {
-      "type": "PI filter with adaptive gear-shifting"
+      "type": "PI filter with adaptive gear-shifting",
+      "dependencies": {}
     },
     "DIVIDER": {
-      "type": "8-bit high-speed integer feedback divider"
+      "type": "8-bit high-speed integer feedback divider",
+      "dependencies": {}
     },
     "SPI_SLAVE": {
-      "type": "Mode 0 asynchronous SPI controller"
+      "type": "Mode 0 asynchronous SPI controller",
+      "dependencies": {}
     }
   },
   "tools": {
