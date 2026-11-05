@@ -1,0 +1,49 @@
+{
+  "name": "dpll_testchip",
+  "design_type": "M",
+  "technology": "IHP",
+  "category": "Mixed-Signal",
+  "subcategory": "Phase-Locked Loop (PLL)",
+  "license": "Apache-2.0",
+  "trl": 5,
+  "die_size_x_um": 1200.0,
+  "die_size_y_um": 1200.0,
+  "core_size_x_um": 802.4,
+  "core_size_y_um": 802.4,
+  "wirebond_pads": 16,
+  "repository": "https://github.com/schemmelj/ihp-sg13cmos5l-dpll.git",
+  "process": "SG13CMOS5L",
+  "metal_stack": "4 thin metals (M1-M4) + 1 thick TopMetal1 (TM1, 2.0 um)",
+  "dependencies": {
+    "DCO": {
+      "type": "15-coarse + 8-fine Vernier ring oscillator"
+    },
+    "TDC": {
+      "type": "256-stage Flash Inverter Delay-Line (39.5 ps LSB)"
+    },
+    "LOOP_FILTER": {
+      "type": "PI filter with adaptive gear-shifting"
+    },
+    "DIVIDER": {
+      "type": "8-bit high-speed integer feedback divider"
+    },
+    "SPI_SLAVE": {
+      "type": "Mode 0 asynchronous SPI controller"
+    }
+  },
+  "tools": {
+    "OpenROAD": "v2.0 (Physical Implementation)",
+    "Yosys": "0.45 (Logic Synthesis & Formal LEC)",
+    "KLayout": "0.28.16 (Foundry DRC & Transistor-Level LVS)",
+    "Icarus_Verilog": "v12 (Multi-Corner Dynamic Simulation)"
+  },
+  "top_cell_name": "dpll_testchip",
+  "release": {
+    "version": "v.1.0.0",
+    "gds": "design_data/gds/FMD_QNC_dpll_testchip.gds",
+    "gds_gz": "design_data/gds/FMD_QNC_dpll_testchip.gds.gz",
+    "cdl": "design_data/cdl/dpll_testchip_schematic.cdl",
+    "def": "design_data/def/dpll_testchip.def",
+    "documentation": "doc/testchip_documentation.pdf"
+  }
+}
