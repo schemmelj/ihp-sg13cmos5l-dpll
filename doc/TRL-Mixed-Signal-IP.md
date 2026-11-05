@@ -7,45 +7,45 @@ have a short overview of IP in terms of its maturity.
 
 ## TRL1 - Basic principles observed
 
-- [ ] Is the IP functionality clearly described?
-- [ ] Is the IP principle of operation explained in detail?
-- [ ] Are the IP architecture design equations fully listed?
-- [ ] Do authors supply any mixed-signal HDL functional model (e.g. Verilog-A) of the IP?
-- [ ] Are functional simulation results of the IP reported for a typical case?
+- [x] Is the IP functionality clearly described?
+- [x] Is the IP principle of operation explained in detail?
+- [x] Are the IP architecture design equations fully listed?
+- [x] Do authors supply any mixed-signal HDL functional model (e.g. Verilog-A) of the IP?
+- [x] Are functional simulation results of the IP reported for a typical case?
 
 ## TRL2 - Concept formulation
 
-- [ ] Is the IP architecture described at block level?
-- [ ] Are the specifications of each individual block of the IP architecture clearly identified?
-- [ ] If the IP architecture can be configured by means of internal registers, is their mapping declared?
-- [ ] Do authors supply a complete test bench to validate the IP block-level architecture?
-- [ ] Is any verification procedure given to check the IP block-level performance figures?
-- [ ] Are architectural simulation results of the IP reported for a typical case?
+- [x] Is the IP architecture described at block level?
+- [x] Are the specifications of each individual block of the IP architecture clearly identified?
+- [x] If the IP architecture can be configured by means of internal registers, is their mapping declared?
+- [x] Do authors supply a complete test bench to validate the IP block-level architecture?
+- [x] Is any verification procedure given to check the IP block-level performance figures?
+- [x] Are architectural simulation results of the IP reported for a typical case?
 
 ## TRL3 - Proof of concept at schematic level
 
-- [ ] Are the IP schematics available at transistor level (analog parts) and gate level (digital parts)?
-- [ ] Are all dependencies of the IP schematics on logic libraries declared?
-- [ ] Are the analog IP ports fully specified at electrical level?
-- [ ] Are the digital IP ports fully specified at logical level (e.g. protocols)?
-- [ ] Do authors supply a mixed-signal test bench to validate the IP schematics?
-- [ ] Is any verification procedure given to check the IP schematic performance figures?
-- [ ] Are mixed-signal simulation results of the IP schematics reported for a typical case?
+- [x] Are the IP schematics available at transistor level (analog parts) and gate level (digital parts)?
+- [x] Are all dependencies of the IP schematics on logic libraries declared?
+- [x] Are the analog IP ports fully specified at electrical level?
+- [x] Are the digital IP ports fully specified at logical level (e.g. protocols)?
+- [x] Do authors supply a mixed-signal test bench to validate the IP schematics?
+- [x] Is any verification procedure given to check the IP schematic performance figures?
+- [x] Are mixed-signal simulation results of the IP schematics reported for a typical case?
 
 ## TRL4 - Full design at schematic level
 
-- [ ] Are the mixed-signal simulation results of the IP schematics extended to process, supply and temperature (PVT) corners?
-- [ ] Are the mixed-signal simulation results of the IP schematics extended to technology mismatching?
-- [ ] Are the authors defining the mixed-signal supply domains of the IP schematics and their individual power requirements?
-- [ ] Does the IP description include any power consumption model (e.g. as a function of input stimuli)?
+- [x] Are the mixed-signal simulation results of the IP schematics extended to process, supply and temperature (PVT) corners?
+- [x] Are the mixed-signal simulation results of the IP schematics extended to technology mismatching?
+- [x] Are the authors defining the mixed-signal supply domains of the IP schematics and their individual power requirements?
+- [x] Does the IP description include any power consumption model (e.g. as a function of input stimuli)?
 
 ## TRL5 - Full design at layout level
 
-- [ ] Is the IP complete layout available?
-- [ ] Are all dependencies of the IP layout on logic libraries declared?
-- [ ] Do authors supply a clean DRC report?
-- [ ] Do authors supply a clean LVS report?
-- [ ] Are post-layout mixed-signal simulation results of the IP layout reported for PVT corners?
+- [x] Is the IP complete layout available?
+- [x] Are all dependencies of the IP layout on logic libraries declared?
+- [x] Do authors supply a clean DRC report?
+- [x] Do authors supply a clean LVS report?
+- [x] Are post-layout mixed-signal simulation results of the IP layout reported for PVT corners?
 
 ## TRL6 - Full design for SoC integration
 

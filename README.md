@@ -62,7 +62,8 @@ This repository adheres to the standard IHP open-source submission layout:
 └── val/                             # Physical and dynamic sign-off verification data
     ├── README.md                    # Validation summary
     ├── drc/
-    │   └── drc_summary.rpt          # KLayout SG13G2 DRC sign-off: 0 errors
+    │   ├── drc_summary.rpt          # KLayout SG13G2 DRC sign-off: 0 errors
+    │   └── density_summary.rpt      # Global & window density verification report (100% pass)
     ├── lvs/
     │   └── lvs_summary.rpt          # KLayout transistor-level LVS sign-off: MATCH (0 diff)
     └── sim/
@@ -78,8 +79,11 @@ This repository adheres to the standard IHP open-source submission layout:
 
 | Verification Metric | Target / Rule | Result | Status |
 |:---|:---|:---:|:---:|
-| **Foundry DRC** | Official IHP `sg13g2.lydrc` (78 rule categories) | **0 Errors** | **PASS** |
+| **Foundry DRC** | Official IHP `sg13g2_maximal.lydrc` ($densityRules = true) | **0 Errors** | **PASS** |
 | **Transistor-Level LVS** | KLayout `sg13g2.lvs` (83,952 devices, 42,205 nets) | **MATCH (0 Diff)** | **PASS** |
+| **Global Layer Density** | Activ (36.2%), GatPoly (25.1%), M1-M4 (35.8-41.6%), TM1 (41.9%) | **7/7 Layers Pass** | **PASS** |
+| **Moving Window Density** | $800 \times 800\,\mu\text{m}^2$ windows, step $400\,\mu\text{m}$ (IHP maximal spec) | **100% Tiles Pass** | **PASS** |
+| **Dummy Metal Fill** | GatPoly (5/22, $272\,\text{k}\mu\text{m}^2$), M2 (10/22, $356\,\text{k}\mu\text{m}^2$) | **DRC Clean (`MFil.c/a2`)** | **PASS** |
 | **Pure Bondpad Reference** | Terminal matching exclusively at 16 TopMetal1 wirebond pads | **Verified** | **PASS** |
 | **Logic Equivalence (LEC)**| 3-Stage Formal LEC (Yosys SAT + Induction) | **8,138 / 8,138 Proven** | **PASS** |
 | **Process Antenna Ratio** | Max antenna ratio $< 40,308 : 1$ | **407.72 : 1 max** | **PASS** |

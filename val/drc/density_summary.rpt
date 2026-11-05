@@ -1,0 +1,44 @@
+=========================================================================================================
+IHP SG13G2 (SG13CMOS5L) DENSITY & METAL FILL VERIFICATION REPORT
+Layout Cell: dpll_testchip_top | Layout File: design_data/gds/FMD_QNC_dpll_testchip.gds.gz
+Chip Bounding Box: (0.0, 0.0) to (1200.0, 1200.0) um | Total Die Area: 1440000.00 um^2 (1.4400 mm^2)
+Sign-Off Rule Deck: tools/pdks/ihp-sg13g2/drc/sg13g2_maximal.lydrc ($densityRules = true)
+=========================================================================================================
+
+1. GLOBAL DENSITY COMPLIANCE (Overall Die Area)
+---------------------------------------------------------------------------------------------------------
+Layer       | Drawn Area     | Fill Area (dt 22)| Total Area     | Density  | IHP DRC Spec  | Status
+---------------------------------------------------------------------------------------------------------
+Activ       |  521334.5 um^2 |        0.0 um^2  |  521334.5 um^2 |  36.20%  | 35.0 - 55.0%  | PASS (AFil.g)
+GatPoly     |   89018.2 um^2 |   272180.0 um^2  |  361198.2 um^2 |  25.08%  | >= 15.0%      | PASS (GFil.g)
+Metal1      |  515239.5 um^2 |        0.0 um^2  |  515239.5 um^2 |  35.78%  | 35.0 - 60.0%  | PASS (M1.j)
+Metal2      |  195188.2 um^2 |   356832.0 um^2  |  552020.2 um^2 |  38.33%  | 35.0 - 60.0%  | PASS (M2.j)
+Metal3      |  598257.3 um^2 |        0.0 um^2  |  598257.3 um^2 |  41.55%  | 35.0 - 60.0%  | PASS (M3.j)
+Metal4      |  561332.0 um^2 |        0.0 um^2  |  561332.0 um^2 |  38.98%  | 35.0 - 60.0%  | PASS (M4.j)
+TopMetal1   |  602583.0 um^2 |        0.0 um^2  |  602583.0 um^2 |  41.85%  | 25.0 - 70.0%  | PASS (TM1.c)
+---------------------------------------------------------------------------------------------------------
+
+2. LOCAL MOVING WINDOW DENSITY COMPLIANCE (800 x 800 um^2, step = 400.0 um, tiles_stay_inside: true)
+---------------------------------------------------------------------------------------------------------
+Layer       | Min Window | Max Window | Window Span       | IHP DRC Window Spec | Status
+---------------------------------------------------------------------------------------------------------
+Activ       | 35.74%     | 37.32%     | [35.74%, 37.32%]  | 25.0 - 65.0%        | PASS (AFil.g2)
+GatPoly     | N/A        | N/A        | Global check only | >= 15.0%            | PASS
+Metal1      | 35.11%     | 37.44%     | [35.11%, 37.44%]  | 25.0 - 75.0%        | PASS (M1.l)
+Metal2      | 32.28%     | 34.36%     | [32.28%, 34.36%]  | 25.0 - 75.0%        | PASS (M2.l)
+Metal3      | 37.18%     | 37.44%     | [37.18%, 37.44%]  | 25.0 - 75.0%        | PASS (M3.l)
+Metal4      | 32.97%     | 33.08%     | [32.97%, 33.08%]  | 25.0 - 75.0%        | PASS (M4.l)
+TopMetal1   | N/A        | N/A        | Global check only | 25.0 - 70.0%        | PASS
+---------------------------------------------------------------------------------------------------------
+
+3. METAL FILL SUMMARY & NOTES
+---------------------------------------------------------------------------------------------------------
+- GatPoly: 272,180.0 um^2 of dummy poly fill (5/22) is inserted to meet the 15% min global requirement.
+- Metal2:  356,832.0 um^2 of dummy metal fill (10/22) is inserted to bring local window density comfortably
+  above the 25.0% minimum (actual: [32.28%, 34.36%]) and global density to 38.33% (target: 35.0 - 60.0%).
+- Metal1, Metal3, Metal4, and TopMetal1 natively satisfy all global (35-60%) and local window (25-75%)
+  requirements via dense core routing, power rings, and wide distribution meshes without extra fill.
+- All dummy shapes strictly follow IHP filler rules: MFil.c (space to drawn metal >= 0.42 um),
+  MFil.a2 (fill width <= 5.0 um), and GFil.d (GatPoly:filler space >= 1.1 um).
+- Overall Sign-off Status: 100% PASS
+=========================================================================================================

@@ -3,7 +3,7 @@
   "design_type": "M",
   "technology": "IHP",
   "category": "Mixed-Signal",
-  "subcategory": "Phase-Locked Loop (PLL)",
+  "subcategory": "Phase-Locked Loop",
   "license": "Apache-2.0",
   "trl": 5,
   "die_size_x_um": 1200.0,
@@ -45,5 +45,23 @@
     "cdl": "design_data/cdl/dpll_testchip_schematic.cdl",
     "def": "design_data/def/dpll_testchip.def",
     "documentation": "doc/testchip_documentation.pdf"
+  },
+  "density": {
+    "status": "PASS",
+    "global_rules": "PASS (100% compliant with AFil.g, GFil.g, M1.j-M4.j, TM1.c)",
+    "window_rules": "PASS (800x800 um^2 tile_step 400 um tiles_stay_inside: true)",
+    "metal_fill": "SG13CMOS5L compliant (GatPoly 5/22, Metal2 10/22)"
+  },
+  "drc": {
+    "status": "PASS",
+    "errors": 0,
+    "deck": "sg13g2_maximal.lydrc"
+  },
+  "lvs": {
+    "status": "MATCH",
+    "errors": 0,
+    "deck": "sg13g2.lvs",
+    "devices": 83952,
+    "nets": 42205
   }
 }
