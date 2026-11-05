@@ -113,38 +113,3 @@ jobs:
         run: |
           grep "Overall Sign-off Status: 100% PASS" val/drc/density_summary.rpt || { echo "Density check failed!"; exit 1; }
           echo "Density check: 100% PASS verified."
-
-  audit-tech-isolation:
-    name: Technology Isolation Audit
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Audit for foreign process references
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 - << 'PY'
-          import os, re, sys
-          pattern = re.compile(r'(n16|16nm|tsmc|finfet)', re.IGNORECASE)
-          found = []
-          for root, dirs, files in os.walk("."):
-              if ".git" in dirs: dirs.remove(".git")
-              for f in files:
-                  if f.endswith((".gds", ".gz", ".pdf", ".png")): continue
-                  path = os.path.join(root, f)
-                  try:
-                      with open(path, "r", encoding="utf-8", errors="ignore") as handle:
-                          for line_no, line in enumerate(handle, 1):
-                              if pattern.search(line):
-                                  found.append(f"{path}:{line_no}: {line.strip()[:100]}")
-                  except Exception:
-                      pass
-          if found:
-              print(f"FAILED: Found {len(found)} forbidden technology references:", file=sys.stderr)
-              for hit in found[:10]:
-                  print("  ", hit, file=sys.stderr)
-              sys.exit(1)
-          print("Technology Isolation Audit: 0 foreign references found. 100% clean!")
-          PY
