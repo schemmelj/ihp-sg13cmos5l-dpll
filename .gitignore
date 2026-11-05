@@ -1,0 +1,12 @@
+# EDA & Simulation artifacts
+*.vcd
+*.fst
+*.vvp
+*.log
+*.tmp
+*.bak
+*~
+*.swp
+.DS_Store
+__pycache__/
+!val/sim/*.log

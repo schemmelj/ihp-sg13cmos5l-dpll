@@ -1,0 +1,311 @@
+{
+  "TYP": {
+    "corner": "TYP",
+    "stages": {
+      "Stage 1: 50.0 MHz Default": {
+        "target_freq_mhz": 50.0,
+        "freq_mhz": 50.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 3: 125.0 MHz SPI Burst": {
+        "target_freq_mhz": 125.0,
+        "freq_mhz": 125.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 4: 200.0 MHz SPI Burst": {
+        "target_freq_mhz": 200.0,
+        "freq_mhz": 200.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 5: 100.0 MHz SPI Reg24": {
+        "target_freq_mhz": 100.0,
+        "freq_mhz": 100.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 6: 100.0 MHz Under Stress": {
+        "target_freq_mhz": 100.0,
+        "freq_mhz": 100.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.33,
+        "c2c_jitter_ps": 0.33,
+        "pad_locked": 1,
+        "status": "PASS"
+      }
+    },
+    "spi_verify": [
+      {
+        "reg": "REG_OTW_NOM (0x00) [ref_clk=0]",
+        "hex": "0xabcd",
+        "decoded": "43981",
+        "expected": "43981"
+      },
+      {
+        "reg": "REG_OTW_NOM (0x00)",
+        "hex": "0x0d7f",
+        "decoded": "3455",
+        "expected": "3455"
+      },
+      {
+        "reg": "REG_DIV_CTRL (0x01)",
+        "hex": "0x0032",
+        "decoded": "div_n=50",
+        "expected": "50"
+      },
+      {
+        "reg": "REG_OTW_NOM (0x00)",
+        "hex": "0xc8ff",
+        "decoded": "51455",
+        "expected": "51455"
+      }
+    ],
+    "lock_times_us": {
+      "Stage 1 (Default 50 MHz)": {
+        "lock_time_us": 17.0,
+        "lock_time_ns": 17000.0,
+        "total_t_us": 47.5
+      },
+      "Stage 3 (SPI Burst 125 MHz)": {
+        "lock_time_us": 24.0,
+        "lock_time_ns": 24000.0,
+        "total_t_us": 123.5
+      },
+      "Stage 4 (SPI Burst 200 MHz)": {
+        "lock_time_us": 29.0,
+        "lock_time_ns": 29000.0,
+        "total_t_us": 194.5
+      },
+      "Stage 5 (SPI Reg24 100 MHz)": {
+        "lock_time_us": 16.0,
+        "lock_time_ns": 16000.0,
+        "total_t_us": 264.5
+      }
+    },
+    "total_clk_cycles": 33232,
+    "runt_glitches": 0,
+    "passed_checks": 9,
+    "total_checks": 9,
+    "overall_pass": true
+  },
+  "FAST": {
+    "corner": "FAST",
+    "stages": {
+      "Stage 1: 50.0 MHz Default": {
+        "target_freq_mhz": 50.0,
+        "freq_mhz": 50.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 3: 125.0 MHz SPI Burst": {
+        "target_freq_mhz": 125.0,
+        "freq_mhz": 125.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 4: 200.0 MHz SPI Burst": {
+        "target_freq_mhz": 200.0,
+        "freq_mhz": 200.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 5: 100.0 MHz SPI Reg24": {
+        "target_freq_mhz": 100.0,
+        "freq_mhz": 100.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 6: 100.0 MHz Under Stress": {
+        "target_freq_mhz": 100.0,
+        "freq_mhz": 100.001,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.85,
+        "c2c_jitter_ps": 0.87,
+        "pad_locked": 1,
+        "status": "PASS"
+      }
+    },
+    "spi_verify": [
+      {
+        "reg": "REG_OTW_NOM (0x00) [ref_clk=0]",
+        "hex": "0xabcd",
+        "decoded": "43981",
+        "expected": "43981"
+      },
+      {
+        "reg": "REG_OTW_NOM (0x00)",
+        "hex": "0x0d7f",
+        "decoded": "3455",
+        "expected": "3455"
+      },
+      {
+        "reg": "REG_DIV_CTRL (0x01)",
+        "hex": "0x0032",
+        "decoded": "div_n=50",
+        "expected": "50"
+      },
+      {
+        "reg": "REG_OTW_NOM (0x00)",
+        "hex": "0xc8ff",
+        "decoded": "51455",
+        "expected": "51455"
+      }
+    ],
+    "lock_times_us": {
+      "Stage 1 (Default 50 MHz)": {
+        "lock_time_us": 17.0,
+        "lock_time_ns": 17000.0,
+        "total_t_us": 47.5
+      },
+      "Stage 3 (SPI Burst 125 MHz)": {
+        "lock_time_us": 24.0,
+        "lock_time_ns": 24000.0,
+        "total_t_us": 123.5
+      },
+      "Stage 4 (SPI Burst 200 MHz)": {
+        "lock_time_us": 29.0,
+        "lock_time_ns": 29000.0,
+        "total_t_us": 194.5
+      },
+      "Stage 5 (SPI Reg24 100 MHz)": {
+        "lock_time_us": 16.0,
+        "lock_time_ns": 16000.0,
+        "total_t_us": 264.5
+      }
+    },
+    "total_clk_cycles": 33232,
+    "runt_glitches": 0,
+    "passed_checks": 9,
+    "total_checks": 9,
+    "overall_pass": true
+  },
+  "SLOW": {
+    "corner": "SLOW",
+    "stages": {
+      "Stage 1: 50.0 MHz Default": {
+        "target_freq_mhz": 50.0,
+        "freq_mhz": 50.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 3: 125.0 MHz SPI Burst": {
+        "target_freq_mhz": 125.0,
+        "freq_mhz": 125.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 4: 200.0 MHz SPI Burst": {
+        "target_freq_mhz": 200.0,
+        "freq_mhz": 200.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 5: 100.0 MHz SPI Reg24": {
+        "target_freq_mhz": 100.0,
+        "freq_mhz": 100.0,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.0,
+        "c2c_jitter_ps": 0.0,
+        "pad_locked": 1,
+        "status": "PASS"
+      },
+      "Stage 6: 100.0 MHz Under Stress": {
+        "target_freq_mhz": 100.0,
+        "freq_mhz": 100.002,
+        "duty_cycle_pct": 50.0,
+        "rms_jitter_ps": 0.94,
+        "c2c_jitter_ps": 0.95,
+        "pad_locked": 1,
+        "status": "PASS"
+      }
+    },
+    "spi_verify": [
+      {
+        "reg": "REG_OTW_NOM (0x00) [ref_clk=0]",
+        "hex": "0xabcd",
+        "decoded": "43981",
+        "expected": "43981"
+      },
+      {
+        "reg": "REG_OTW_NOM (0x00)",
+        "hex": "0x0d7f",
+        "decoded": "3455",
+        "expected": "3455"
+      },
+      {
+        "reg": "REG_DIV_CTRL (0x01)",
+        "hex": "0x0032",
+        "decoded": "div_n=50",
+        "expected": "50"
+      },
+      {
+        "reg": "REG_OTW_NOM (0x00)",
+        "hex": "0xc8ff",
+        "decoded": "51455",
+        "expected": "51455"
+      }
+    ],
+    "lock_times_us": {
+      "Stage 1 (Default 50 MHz)": {
+        "lock_time_us": 17.0,
+        "lock_time_ns": 17000.0,
+        "total_t_us": 47.5
+      },
+      "Stage 3 (SPI Burst 125 MHz)": {
+        "lock_time_us": 24.0,
+        "lock_time_ns": 24000.0,
+        "total_t_us": 123.5
+      },
+      "Stage 4 (SPI Burst 200 MHz)": {
+        "lock_time_us": 27.0,
+        "lock_time_ns": 27000.0,
+        "total_t_us": 192.5
+      },
+      "Stage 5 (SPI Reg24 100 MHz)": {
+        "lock_time_us": 16.0,
+        "lock_time_ns": 16000.0,
+        "total_t_us": 262.5
+      }
+    },
+    "total_clk_cycles": 32832,
+    "runt_glitches": 0,
+    "passed_checks": 9,
+    "total_checks": 9,
+    "overall_pass": true
+  }
+}

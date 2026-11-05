@@ -1,0 +1,57 @@
+[TESTCHIP_TB] ================================================================
+[TESTCHIP_TB] IHP 130nm SG13G2 Full Testchip Post-Layout SDF Back-Annotation
+[TESTCHIP_TB] Selected Corner: TYPICAL (1.20V Core / 3.30V IO, +25C)
+[TESTCHIP_TB] ================================================================
+
+================================================================================
+  STAGE 0: Asynchronous SPI Write/Readback with Reference Clock Stopped (0 Hz)
+================================================================================
+[SPI_VERIFY] Read REG_OTW_NOM (0x00) [ref_clk=0] = 0xabcd (43981) [Expected: 43981]
+
+================================================================================
+  STAGE 1: Power-On Reset Default Acquisition (50.0 MHz, N=50) via External Pads
+================================================================================
+[TESTCHIP_TB] [LOCK_DETECTED] Stage 1 (Default 50 MHz) locked in 17.00 us (Total t = 47.50 us)
+[CLK_ANALYZER] Stage 1: 50.0 MHz Default    | Target:  50.00 MHz | Measured:  50.000 MHz | Duty: 50.00% | sigma_T:  0.00 ps | J_cc:  0.00 ps | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 2: External SPI Slave Register Readback Verification (pad_spi_miso)
+================================================================================
+[SPI_VERIFY] Read REG_OTW_NOM (0x00)   = 0x0d7f (3455) [Expected: 3455]
+[SPI_VERIFY] Read REG_DIV_CTRL (0x01)  = 0x0032 (div_n=50) [Expected: 50]
+
+================================================================================
+  STAGE 3: 64-Bit SPI Atomic Burst Programming -> 125.0 MHz (N=125, OTW=51455)
+================================================================================
+[TESTCHIP_TB] [LOCK_DETECTED] Stage 3 (SPI Burst 125 MHz) locked in 24.00 us (Total t = 123.50 us)
+[CLK_ANALYZER] Stage 3: 125.0 MHz SPI Burst | Target: 125.00 MHz | Measured: 125.000 MHz | Duty: 50.00% | sigma_T:  0.00 ps | J_cc:  0.00 ps | pad_locked=1 | [PASS]
+[SPI_VERIFY] Read REG_OTW_NOM (0x00)   = 0xc8ff (51455) [Expected: 51455]
+
+================================================================================
+  STAGE 4: 64-Bit SPI Atomic Burst Programming -> 200.0 MHz (N=200, OTW=63455)
+================================================================================
+[TESTCHIP_TB] [LOCK_DETECTED] Stage 4 (SPI Burst 200 MHz) locked in 29.00 us (Total t = 194.50 us)
+[CLK_ANALYZER] Stage 4: 200.0 MHz SPI Burst | Target: 200.00 MHz | Measured: 200.000 MHz | Duty: 50.00% | sigma_T:  0.00 ps | J_cc:  0.00 ps | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 5: 24-Bit Register-Addressed SPI Programming -> 100.0 MHz (N=100)
+================================================================================
+[TESTCHIP_TB] [LOCK_DETECTED] Stage 5 (SPI Reg24 100 MHz) locked in 16.00 us (Total t = 264.50 us)
+[CLK_ANALYZER] Stage 5: 100.0 MHz SPI Reg24 | Target: 100.00 MHz | Measured: 100.000 MHz | Duty: 50.00% | sigma_T:  0.00 ps | J_cc:  0.00 ps | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 6: External Pad Reference Jitter (+/-75 ps) & 30/70 Duty Distortion
+================================================================================
+[CLK_ANALYZER] Stage 6: 100.0 MHz Under Stress | Target: 100.00 MHz | Measured: 100.000 MHz | Duty: 50.00% | sigma_T:  0.33 ps | J_cc:  0.33 ps | pad_locked=1 | [PASS]
+
+================================================================================
+  STANDALONE IHP 130nm TESTCHIP EXTERNAL-IO VERIFICATION SCORECARD
+================================================================================
+  Corner Selected         : TYP
+  Total Clock Cycles      : 33232 cycles (on pad_dco_clk_out)
+  Detected Runt Glitches  : 0 glitches
+  Passed Verification Sub : 9 / 9 checks
+  >>> OVERALL TESTCHIP RESULT: [ ALL EXTERNAL-IO & SPI TESTS PASSED ] <<<
+================================================================================
+
+testchip/sim/tb_dpll_testchip.sv:533: $finish called at 281490855000 (1fs)
