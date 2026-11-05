@@ -1,0 +1,150 @@
+name: Tapeout Package CI & Compliance
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  validate-metadata:
+    name: Validate IHP Open-Silicon-MPW Metadata
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Validate info.json and categories
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - << 'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          info_path = Path("doc/info.json")
+          if not info_path.is_file():
+              print("ERROR: doc/info.json not found!", file=sys.stderr)
+              sys.exit(1)
+
+          data = json.loads(info_path.read_text(encoding="utf-8"))
+          required_fields = ["name", "design_type", "technology", "unique_id", "category", "subcategory", "process", "sealring_x", "sealring_y", "top_cell_name", "release"]
+          missing = [f for f in required_fields if not data.get(f)]
+          if missing:
+              print(f"ERROR: Missing required fields in doc/info.json: {missing}", file=sys.stderr)
+              sys.exit(1)
+
+          # Verify category and subcategory against scripts/ip-categories.json
+          cat_path = Path("scripts/ip-categories.json")
+          if cat_path.is_file():
+              categories = json.loads(cat_path.read_text(encoding="utf-8"))
+              cat = data["category"]
+              subcat = data["subcategory"]
+              if cat not in categories:
+                  print(f"ERROR: Unknown category '{cat}'", file=sys.stderr)
+                  sys.exit(1)
+              if subcat not in categories[cat]:
+                  print(f"ERROR: Unknown subcategory '{subcat}' in category '{cat}'", file=sys.stderr)
+                  sys.exit(1)
+              print(f"Category verified: {cat} -> {subcat} ({categories[cat][subcat]})")
+
+          print("doc/info.json validation: SUCCESS!")
+          PY
+
+  verify-file-integrity:
+    name: Verify Deliverable Files Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check required tapeout files
+        shell: bash
+        run: |
+          set -euo pipefail
+          required_files=(
+            "design_data/gds/FMD_QNC_dpll_testchip.gds"
+            "design_data/gds/FMD_QNC_dpll_testchip.gds.gz"
+            "design_data/def/dpll_testchip.def"
+            "design_data/cdl/dpll_testchip_schematic.cdl"
+            "release/v.1.0.0/gds/FMD_QNC_dpll_testchip.gds.gz"
+            "release/v.1.0.0/netlist/dpll_testchip_schematic.cdl"
+            "release/v.1.0.0/doc/testchip_documentation.pdf"
+            "doc/testchip_documentation.pdf"
+            "doc/Specification.md"
+            "doc/Datasheet.md"
+            "doc/TRL-Mixed-Signal-IP.md"
+            "val/drc/drc_summary.rpt"
+            "val/drc/density_summary.rpt"
+            "val/lvs/lvs_summary.rpt"
+          )
+          for f in "${required_files[@]}"; do
+            if [ ! -s "$f" ]; then
+              echo "ERROR: File missing or empty: $f"
+              exit 1
+            fi
+            echo "OK: $f ($(du -h "$f" | cut -f1))"
+          done
+          echo "All required files verified successfully!"
+
+  verify-signoff-reports:
+    name: Verify Sign-Off Reports (DRC / LVS / Density)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check DRC summary
+        shell: bash
+        run: |
+          grep "Number of DRC errors: 0" val/drc/drc_summary.rpt || { echo "DRC check failed!"; exit 1; }
+          echo "DRC check: 0 errors verified."
+
+      - name: Check LVS summary
+        shell: bash
+        run: |
+          grep "INFO : Congratulations! Netlists match." val/lvs/lvs_summary.rpt || { echo "LVS check failed!"; exit 1; }
+          echo "LVS check: Netlists match verified."
+
+      - name: Check Density summary
+        shell: bash
+        run: |
+          grep "Overall Sign-off Status: 100% PASS" val/drc/density_summary.rpt || { echo "Density check failed!"; exit 1; }
+          echo "Density check: 100% PASS verified."
+
+  audit-tech-isolation:
+    name: Technology Isolation Audit
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Audit for foreign process references
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - << 'PY'
+          import os, re, sys
+          pattern = re.compile(r'(n16|16nm|tsmc|finfet)', re.IGNORECASE)
+          found = []
+          for root, dirs, files in os.walk("."):
+              if ".git" in dirs: dirs.remove(".git")
+              for f in files:
+                  if f.endswith((".gds", ".gz", ".pdf", ".png")): continue
+                  path = os.path.join(root, f)
+                  try:
+                      with open(path, "r", encoding="utf-8", errors="ignore") as handle:
+                          for line_no, line in enumerate(handle, 1):
+                              if pattern.search(line):
+                                  found.append(f"{path}:{line_no}: {line.strip()[:100]}")
+                  except Exception:
+                      pass
+          if found:
+              print(f"FAILED: Found {len(found)} forbidden technology references:", file=sys.stderr)
+              for hit in found[:10]:
+                  print("  ", hit, file=sys.stderr)
+              sys.exit(1)
+          print("Technology Isolation Audit: 0 foreign references found. 100% clean!")
+          PY

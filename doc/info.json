@@ -37,14 +37,12 @@
     "KLayout": "0.28.16 (Foundry DRC & Transistor-Level LVS)",
     "Icarus_Verilog": "v12 (Multi-Corner Dynamic Simulation)"
   },
-  "top_cell_name": "dpll_testchip",
+  "top_cell_name": "dpll_testchip_top",
   "release": {
     "version": "v.1.0.0",
-    "gds": "design_data/gds/FMD_QNC_dpll_testchip.gds",
-    "gds_gz": "design_data/gds/FMD_QNC_dpll_testchip.gds.gz",
-    "cdl": "design_data/cdl/dpll_testchip_schematic.cdl",
-    "def": "design_data/def/dpll_testchip.def",
-    "documentation": "doc/testchip_documentation.pdf"
+    "gds": "release/v.1.0.0/gds/FMD_QNC_dpll_testchip.gds.gz",
+    "netlist": "release/v.1.0.0/netlist/dpll_testchip_schematic.cdl",
+    "doc": "release/v.1.0.0/doc"
   },
   "density": {
     "status": "PASS",
@@ -63,5 +61,10 @@
     "deck": "sg13g2.lvs",
     "devices": 83952,
     "nets": 42205
-  }
+  },
+  "unique_id": "0001",
+  "sealring_x": 1200.0,
+  "sealring_y": 1200.0,
+  "pdk_version": "5e6d592e4002946a4616f798c357f0f3c06cf3b6",
+  "pdk_repository": "https://github.com/IHP-GmbH/IHP-Open-PDK"
 }
