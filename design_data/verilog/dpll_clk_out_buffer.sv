@@ -13,7 +13,7 @@
 (* dont_touch = "true" *)
 module dpll_clk_out_buffer (
   input  logic clk_in,          // Internal DPLL synthesized clock (dco_clk_out)
-  output logic clk_out_analog   // High-drive clock output to sg13g2_IOPadAnalog
+  output wire  clk_out_analog   // High-drive clock output to sg13g2_IOPadAnalog
 );
 
   (* keep = "true" *) logic n_stg1;

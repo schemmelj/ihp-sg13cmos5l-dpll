@@ -1,0 +1,76 @@
+[TESTCHIP_TB] ================================================================
+[TESTCHIP_TB] IHP 130nm SG13G2 Synthesized Gate-Level Netlist (Pre-Layout SDF)
+[TESTCHIP_TB] Selected Corner: SYNTH_SLOW (1.08V Core / 3.00V IO, +125C, Zero Wire RC)
+[TESTCHIP_TB] ================================================================
+
+================================================================================
+  STAGE 0: Asynchronous SPI Write/Readback with Reference Clock Stopped (0 Hz)
+================================================================================
+[SPI_VERIFY] Read REG_OUT_DIV1 (0x05) [1 Hz cfg] = 0x4ddc (S=19, M=476) [Expected: 0x4DDC]
+[SPI_VERIFY] Read REG_OUT_DIV2 (0x06) [1 Hz cfg] = 0x80d6 (duty=128, frac=214) [Expected: 0x80D6]
+[SPI_VERIFY] Read REG_OTW_NOM (0x00) [500 MHz DCO] = 0xfed1 (65233) [Expected: 65233]
+
+================================================================================
+  STAGE 1: 500.0 MHz DCO Lock (Ref=5.0 MHz, N=100) & 50.0 MHz Output (50% Duty)
+================================================================================
+[TESTCHIP_TB] [LOCK_DETECTED] Stage 1 (500 MHz DCO / 50 MHz Out) locked in 4.00 us (Total t = 12.90 us)
+[FW_SPEED_CAL] Stage 1 Locked OTW_CUR (0x08) = 0xfed1 (65233) -> Calibrated chip_speed_idx = 5832 (Pred 500M=0xfed1, 375M=0xfa2c, 250M=0xddf5)
+[CLK_ANALYZER] Stage 1: 50.0 MHz Default    | Target:  50.00 MHz | Measured:  49.992 MHz | Duty: 50.09% | sigma_T: 129.06 ps | J_cc: 190.97 ps | OTW: 0xfed1 (65233, c= 0, dOTW=  +0) | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 2: Programmable Duty Cycle (<100 MHz) -> 25.0 MHz with 25% & 75% Duty
+================================================================================
+[CLK_ANALYZER] Stage 2a: 25.0 MHz Duty 25%  | Target:  25.00 MHz | Measured:  24.996 MHz | Duty: 24.98% | sigma_T: 174.96 ps | J_cc: 271.80 ps | OTW: 0xfed0 (65232, c= 0, dOTW=  -1) | pad_locked=1 | [PASS]
+[CLK_ANALYZER] Stage 2b: 25.0 MHz Duty 75%  | Target:  25.00 MHz | Measured:  25.004 MHz | Duty: 74.98% | sigma_T: 186.18 ps | J_cc: 293.58 ps | OTW: 0xfecf (65231, c= 0, dOTW=  -2) | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 3: <1% Fine Granularity -> 50.49 MHz (+0.986% Frac-N Step, M=9, F=231)
+================================================================================
+[CLK_ANALYZER] Stage 3: 50.49 MHz Frac-N    | Target:  50.49 MHz | Measured:  50.512 MHz | Duty: 40.37% | sigma_T: 634.68 ps | J_cc: 950.90 ps | OTW: 0xfece (65230, c= 0, dOTW=  -3) | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 4: Glitch-Free Switch to 500.0 MHz Direct Bypass (Ref=10.0 MHz, N=50)
+================================================================================
+[TESTCHIP_TB] [LOCK_DETECTED] Stage 4 (500 MHz Bypass, Ref=10 MHz) locked in 0.90 us (Total t = 40.30 us)
+[CLK_ANALYZER] Stage 4: 500.0 MHz Bypass    | Target: 500.00 MHz | Measured: 500.225 MHz | Duty: 53.49% | sigma_T: 241.00 ps | J_cc: 443.47 ps | OTW: 0xfed0 (65232, c= 0, dOTW=  -1) | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 4B: SPI-Switchable 2x XOR Clock Multiplier -> 1000.0 MHz (1.0 GHz) Out
+================================================================================
+[SPI_VERIFY] Read REG_FB_FRAC (0x07) [1 GHz 2x-XOR] = 0x0100 (mul2=1) [Expected: 0x0100]
+[CLK_ANALYZER] Stage 4b: 1000.0 MHz 2x-XOR  | Target: 1000.00 MHz | Measured: 999.001 MHz | Duty: 55.05% | sigma_T: 142.33 ps | J_cc: 215.66 ps | OTW: 0xfecf (65231, c= 0, dOTW=  -2) | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 5: Coupled Frac-N DCO Hop -> 375.0 MHz (Ref=10 MHz, N=37, fb_frac=128)
+================================================================================
+[TESTCHIP_TB] [LOCK_DETECTED] Stage 5 (375 MHz Coupled Frac-N DCO) locked in 14.62 us (Total t = 68.60 us)
+[CLK_ANALYZER] Stage 5: 375.0 MHz Frac-DCO  | Target: 375.00 MHz | Measured: 375.108 MHz | Duty: 53.02% | sigma_T: 140.23 ps | J_cc: 208.41 ps | OTW: 0xfa2d (64045, c= 0, dOTW=  +1) | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 6: Glitch-Free Hop to 250.0 MHz Min-Octave DCO (Ref=1.0 MHz, N=250)
+================================================================================
+[TESTCHIP_TB] [LOCK_DETECTED] Stage 6 (250 MHz DCO, Ref=1.0 MHz) locked in 21.99 us (Total t = 99.20 us)
+[CLK_ANALYZER] Stage 6: 250.0 MHz Min-DCO   | Target: 250.00 MHz | Measured: 250.013 MHz | Duty: 51.40% | sigma_T: 68.60 ps | J_cc: 98.25 ps | OTW: 0xddf5 (56821, c= 2, dOTW=  +0) | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 6B: SPI-Switchable 2x XOR Clock Multiplier -> 500.0 MHz from 250 MHz DCO
+================================================================================
+[SPI_VERIFY] Read REG_FB_FRAC (0x07) [2x XOR en] = 0x0100 (mul2=1) [Expected: 0x0100]
+[CLK_ANALYZER] Stage 6b: 500.0 MHz 2x-XOR   | Target: 500.00 MHz | Measured: 500.638 MHz | Duty: 27.06% | sigma_T: 60.74 ps | J_cc: 113.86 ps | OTW: 0xddf5 (56821, c= 2, dOTW=  +0) | pad_locked=1 | [PASS]
+
+================================================================================
+  STAGE 7: Glitch-Free Exit from Bypass -> Divided 62.5 MHz (/4) Under Stress
+================================================================================
+[CLK_ANALYZER] Stage 7: 62.5 MHz Divided    | Target:  62.50 MHz | Measured:  62.513 MHz | Duty: 50.04% | sigma_T: 129.06 ps | J_cc: 190.97 ps | OTW: 0xddf5 (56821, c= 2, dOTW=  +0) | pad_locked=1 | [PASS]
+
+================================================================================
+  STANDALONE IHP 130nm TESTCHIP EXTERNAL-IO VERIFICATION SCORECARD
+================================================================================
+  Corner Selected         : SLOW
+  Total Clock Cycles      : 40717 cycles (on pad_dco_clk_out)
+  Detected Runt Glitches  : 0 glitches
+  Passed Verification Sub : 15 / 15 checks
+  >>> OVERALL TESTCHIP RESULT: [ ALL EXTERNAL-IO & SPI TESTS PASSED ] <<<
+================================================================================
+
+testchip/sim/tb_dpll_testchip.sv:801: $finish called at 150560771000 (1fs)

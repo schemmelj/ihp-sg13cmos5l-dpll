@@ -3,8 +3,8 @@
 // Description: Synthesizable Flash Inverter Delay-Line Time-to-Digital Converter
 //              Uses IHP 130nm BiCMOS (SG13G2) sg13g2_inv_1 inverters (~40.0 ps
 //              delay each) and sg13g2_dfrbp_1 D-Flip-Flop sampling bank.
-//              256 stages cover 10,240 ps (exceeding half of the slowest 50 MHz
-//              DCO period = 10,000 ps), providing sub-DCO phase quantization.
+//              256 stages cover >6,500 ps to 13,000 ps across FAST/TYP/SLOW corners,
+//              providing sub-DCO phase quantization across the 250-500 MHz DCO range.
 // ==============================================================================
 
 `timescale 1ps / 1fs
@@ -13,18 +13,17 @@ module tdc_flash #(
   parameter int NUM_STAGES = 256,    // 256 inverter stages (10,240 ps span at 40 ps/stage)
   parameter int STEP_PS    = 40      // IHP 130nm SG13G2 unit inverter propagation delay
 )(
-  input  logic       clk_in,             // High-frequency DCO clock (50 - 200 MHz)
-  input  logic       sample_clk,         // Reference clock edge (1 MHz)
+  input  logic       clk_in,             // High-frequency DCO clock (250 - 500 MHz)
+  input  logic       sample_clk,         // Reference clock edge (1 - 10 MHz)
   input  logic       rst_n,              // Active-low reset (synchronized to sample_clk)
-  input  logic [8:0] half_period_steps,  // Half DCO period in 40 ps steps (e.g. 62..250)
-  output logic [8:0] fine_offset,        // Sub-cycle time offset in 40 ps steps (0..500)
+  input  logic [8:0] half_period_steps,  // Half DCO period in TDC steps
+  output logic [8:0] fine_offset,        // Sub-cycle time offset in TDC steps
   output logic       dco_level,          // Sampled DCO logic level
   output logic       near_posedge        // High when sample_clk landed within +/- T_dco/4 of posedge clk_in
 );
 
   // 1. Tapped Inverter Delay Line (256 stages of 40.0 ps sg13g2_inv_1 cells)
   // tap[0] is clk_in directly (0 ps delay) to eliminate the input inverter deadband.
-  // Using an unpacked 1-bit wire array avoids O(N^2) vector part-select fanout in simulation.
   (* keep = "true" *) wire tap [0:NUM_STAGES];
   assign tap[0] = clk_in;
 
@@ -55,8 +54,6 @@ module tdc_flash #(
   endgenerate
 
   // 2b. Half-Cycle Metastability Resolution Register Bank (Stage 2 Synchronizer)
-  // Allows 500,000 ps (500 ns at 1 MHz ref_clk) for metastable DFFs in dff_q
-  // to resolve before thermometer decoding, adding zero reference-cycle loop latency.
   always_ff @(negedge sample_clk or negedge rst_n) begin
     if (!rst_n) begin
       dff_sync_q <= '0;
@@ -66,8 +63,6 @@ module tdc_flash #(
   end
 
   // 3. Polarity Normalization, 3-Tap Bubble Suppression & Priority Thermometer Encoder
-  // Triggered strictly when dff_sync_q updates on negedge sample_clk (1 MHz) or when
-  // half_period_steps changes, avoiding per-bit vector part-select overhead in simulation.
   logic [NUM_STAGES-1:0] norm_q;
   logic [NUM_STAGES-1:0] clean_q;
   logic [8:0]            edge_pos;

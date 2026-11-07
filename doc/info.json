@@ -8,39 +8,43 @@
   "trl": 5,
   "die_size_x_um": 1200.0,
   "die_size_y_um": 1200.0,
-  "core_size_x_um": 802.4,
-  "core_size_y_um": 802.4,
+  "core_size_x_um": 544.32,
+  "core_size_y_um": 544.32,
   "wirebond_pads": 16,
   "repository": "https://github.com/schemmelj/ihp-sg13cmos5l-dpll.git",
   "process": "SG13CMOS5L",
   "metal_stack": "4 thin metals (M1-M4) + 1 thick TopMetal1 (TM1, 2.0 um)",
   "dependencies": {
     "DCO": {
-      "type": "15-coarse + 8-fine Vernier ring oscillator",
+      "type": "250-500 MHz 1-octave Vernier ring oscillator (3 head + 15 coarse + 8 fine + 1 SDM stage)",
       "dependencies": {}
     },
     "TDC": {
-      "type": "256-stage Flash Inverter Delay-Line (39.5 ps LSB)",
+      "type": "256-stage Flash Inverter Delay-Line (39.5 ps typ LSB)",
       "dependencies": {}
     },
     "LOOP_FILTER": {
-      "type": "PI filter with adaptive gear-shifting",
+      "type": "PI filter with adaptive gear-shifting and live OTW readback (REG_OTW_CUR)",
       "dependencies": {}
     },
-    "DIVIDER": {
-      "type": "8-bit high-speed integer feedback divider",
+    "FB_DIVIDER": {
+      "type": "Coupled Fractional-N feedback divider (N_int=25..500 + 8-bit 1st-order DSM)",
+      "dependencies": {}
+    },
+    "OUT_DIVIDER": {
+      "type": "Glitch-free Fractional-N output divider (1 Hz - 500 MHz, programmable duty cycle) + 2x XOR multiplier (500 MHz - 1.0 GHz)",
       "dependencies": {}
     },
     "SPI_SLAVE": {
-      "type": "Mode 0 asynchronous SPI controller",
+      "type": "Mode 0 asynchronous SPI controller (9 registers 0x00-0x08, hardware speed-index calibration)",
       "dependencies": {}
     }
   },
   "tools": {
-    "OpenROAD": "v2.0 (Physical Implementation)",
-    "Yosys": "0.45 (Logic Synthesis & Formal LEC)",
+    "OpenROAD": "v2.0 (Physical Implementation & OpenRCX SPEF Extraction)",
+    "Yosys": "0.33 (Logic Synthesis & 3-Stage Formal LEC: 9,418/9,418 $equiv proven)",
     "KLayout": "0.28.16 (Foundry DRC & Transistor-Level LVS)",
-    "Icarus_Verilog": "v12 (Multi-Corner Dynamic Simulation)"
+    "Icarus_Verilog": "v12 (6-Corner Back-Annotated SDF & Pre-Layout Dynamic Verification)"
   },
   "top_cell_name": "dpll_testchip_top",
   "release": {
@@ -53,19 +57,24 @@
     "status": "PASS",
     "global_rules": "PASS (100% compliant with AFil.g, GFil.g, M1.j-M4.j, TM1.c)",
     "window_rules": "PASS (800x800 um^2 tile_step 400 um tiles_stay_inside: true)",
-    "metal_fill": "SG13CMOS5L compliant (GatPoly 5/22, Metal2 10/22)"
+    "metal_fill": "SG13CMOS5L compliant (GatPoly 5/22, Metal2 10/22, Metal4 50/22)"
   },
   "drc": {
     "status": "PASS",
     "errors": 0,
-    "deck": "sg13g2_maximal.lydrc"
+    "deck": "sg13cmos5l_drc.lydrc / sg13g2_maximal.lydrc"
   },
   "lvs": {
     "status": "MATCH",
     "errors": 0,
-    "deck": "sg13g2.lvs",
-    "devices": 83952,
-    "nets": 42205
+    "deck": "sg13cmos5l.lvs",
+    "devices": 104386,
+    "nets": 52492
+  },
+  "lec": {
+    "status": "PROVEN",
+    "equiv_cells_proven": 9418,
+    "equiv_cells_unproven": 0
   },
   "unique_id": "0001",
   "sealring_x": 1200.0,

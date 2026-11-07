@@ -100,10 +100,9 @@ l_tm1_pin = layout.find_layer(126, 2)
 l_tm1_pad = layout.find_layer(126, 25)
 
 expected_pads = [
-    "pad_dco_clk_out", "pad_clk_ref", "pad_spi_sclk", "pad_spi_mosi",
-    "pad_spi_miso", "pad_spi_csb", "pad_clk_div_out", "pad_lock_detect",
-    "pad_gear_shift", "pad_reset_n", "VDD_CORE", "VDD_DCO", "VDD_TDC",
-    "VSS", "IOVDD", "IOVSS"
+    "pad_dco_clk_out", "pad_ref_clk", "pad_spi_sck", "pad_spi_mosi",
+    "pad_spi_miso", "pad_spi_cs_n", "pad_locked", "pad_rst_n",
+    "VDD_CORE", "VDD_DCO", "VDD_TDC", "VSS", "IOVDD"
 ]
 
 found_labels = []
