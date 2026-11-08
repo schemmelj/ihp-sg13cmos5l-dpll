@@ -53,7 +53,7 @@ module dpll_top #(
 
   logic signed [ERROR_WIDTH-1:0] phase_error;
   logic                          error_valid;
-  logic [OTW_WIDTH-1:0]          otw;
+  (* keep = "true" *) logic [OTW_WIDTH-1:0] otw;
   assign otw_mon = otw;
   (* keep = "true" *) logic      dco_clk_500m;
   logic                          fb_clk;
@@ -72,6 +72,7 @@ module dpll_top #(
   // ----------------------------------------------------------------------------
   logic rst_n_meta, rst_n_sync;
   logic rst_n_dco_meta, rst_n_dco_sync;
+  logic rst_n_dco_neg_meta, rst_n_dco_neg_sync;
 
   // 1. Reference clock (1 - 10 MHz) reset synchronizer
   always_ff @(posedge ref_clk or negedge rst_n) begin
@@ -84,7 +85,7 @@ module dpll_top #(
     end
   end
 
-  // 2. 250-500 MHz DCO clock reset synchronizer for feedback & output dividers
+  // 2a. 250-500 MHz DCO posedge reset synchronizer for feedback & output dividers
   always_ff @(posedge dco_clk_500m or negedge rst_n_sync) begin
     if (!rst_n_sync) begin
       rst_n_dco_meta <= 1'b0;
@@ -92,6 +93,18 @@ module dpll_top #(
     end else begin
       rst_n_dco_meta <= 1'b1;
       rst_n_dco_sync <= rst_n_dco_meta;
+    end
+  end
+
+  // 2b. 250-500 MHz DCO negedge reset synchronizer for div_phase_neg registers
+  //     (eliminates 1.0 ns half-cycle posedge -> negedge asynchronous recovery check)
+  always_ff @(negedge dco_clk_500m or negedge rst_n_sync) begin
+    if (!rst_n_sync) begin
+      rst_n_dco_neg_meta <= 1'b0;
+      rst_n_dco_neg_sync <= 1'b0;
+    end else begin
+      rst_n_dco_neg_meta <= 1'b1;
+      rst_n_dco_neg_sync <= rst_n_dco_neg_meta;
     end
   end
 
@@ -165,6 +178,7 @@ module dpll_top #(
   ) u_divider (
     .clk          (dco_clk_500m),
     .rst_n        (rst_n_dco_sync),
+    .rst_n_neg    (rst_n_dco_neg_sync),
     .div_ratio    (div_n),
     .fb_frac      (fb_frac),
     .clk_out      (fb_clk),
@@ -177,6 +191,7 @@ module dpll_top #(
   frac_n_out_divider u_out_div (
     .clk_dco           (dco_clk_500m),
     .rst_n             (rst_n_dco_sync),
+    .rst_n_async       (rst_n),
     .out_div_bypass    (out_div_bypass),
     .out_mul2_en       (out_mul2_en),
     .out_prescale_shift(out_prescale_shift),

@@ -81,16 +81,20 @@ module loop_filter #(
   end
 
   // 2. Slew-Clamped Anti-Windup Integrator Input:
-  //    Clamping the integrator input to +/-(gear_shift_thresh >> 3) during coarse phase
-  //    slewing prevents initial phase offsets from winding up the frequency integrator.
-  logic [7:0] slew_int_clamp;
-  assign slew_int_clamp = gear_shift_thresh >> 3;
+  //    Clamping the integrator input when |phase_error| > gear_shift_thresh prevents
+  //    large initial phase offsets on reference/channel hops from winding up the
+  //    frequency integrator while preserving fast linear capture for frequency offsets.
+  logic        is_slew_zone;
+  logic [10:0] slew_int_clamp;
+  assign is_slew_zone   = (abs_phase_error > {8'b0, gear_shift_thresh});
+  assign slew_int_clamp = fast_lock_en ? {gear_shift_thresh, 3'b000}
+                                       : {2'b00, gear_shift_thresh, 1'b0};
 
   always_comb begin
-    if (is_fast_mode && (phase_error > 0))
-      int_error = signed'({8'b0, slew_int_clamp});
-    else if (is_fast_mode && (phase_error < 0))
-      int_error = -signed'({8'b0, slew_int_clamp});
+    if (is_slew_zone && (phase_error > 0))
+      int_error = signed'({5'b0, slew_int_clamp});
+    else if (is_slew_zone && (phase_error < 0))
+      int_error = -signed'({5'b0, slew_int_clamp});
     else
       int_error = phase_error;
   end

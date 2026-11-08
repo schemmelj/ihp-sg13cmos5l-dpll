@@ -55,18 +55,29 @@ module dco_nco #(
   (* keep = "true" *) logic [OTW_WIDTH-1:0]     ctrl_word;
   logic [OTW_WIDTH-1:0]     ctrl_word_meta, ctrl_word_sync;
   logic [8:0]               ctrl_top_act;
+  (* keep = "true" *) logic [8:0]               ctrl_dec_src_q;
+  logic [1:0]               slew_phase;
+  logic [3:0]               sync_hi_q;
+  logic                     inc_c_q, dec_b_q;
+  logic                     lt_lo_q, gt_lo_q;
+  logic [4:0]               ctrl_inc_lo_q, ctrl_dec_lo_q;
+  logic [3:0]               ctrl_inc_hi_q, ctrl_dec_hi_q;
+  logic                     step_up_q, step_dn_q;
   logic [OTW_WIDTH-1:0]     ctrl_word_act;
-  (* keep = "true" *) logic [COARSE_STAGES-1:0] coarse_en_comb;
+  logic [COARSE_STAGES-1:0] coarse_en_comb;
   logic [COARSE_STAGES-1:0] coarse_en;
-  (* keep = "true" *) logic [FINE_STAGES-1:0]   fine_en_comb;
+  logic [FINE_STAGES-1:0]   fine_en_comb;
   logic [FINE_STAGES-1:0]   fine_en;
-  (* keep = "true" *) logic [8:0]               sdm_frac_comb;
+  logic [8:0]               sdm_frac_comb;
   logic [8:0]               sdm_frac;
-  logic [8:0]               sdm_acc;
+  logic [3:0]               sdm_frac_hi_q;
+  logic [4:0]               sdm_acc_lo;
+  logic [3:0]               sdm_acc_hi;
+  logic                     lo_carry_q;
   logic                     sdm_carry;
 
   assign ctrl_word     = ~otw;
-  assign ctrl_word_act = {ctrl_top_act, ctrl_word_sync[6:0]};
+  assign ctrl_word_act = {ctrl_dec_src_q, ctrl_word_sync[6:0]};
 
   // Thermometer decoder for 15 coarse stages:
   // ctrl_word_act[15:12] selects 0..15 active coarse delay stages
@@ -78,45 +89,78 @@ module dco_nco #(
   endgenerate
 
   // Thermometer + Vernier decoding for the 8 Fine Stages:
-  // - ctrl_word_act[11:10] (0..3) thermometer-decodes into upper-fine telescopic stages (fine_en[7:5])
-  // - ctrl_word_act[9] enables the mid-fine stage (fine_en[3:2])
+  // - ctrl_word_act[11:10] & ctrl_word_act[9] monotonically span one coarse step (~550 ps)
+  //   without overhang cliffs across sub-step or coarse boundaries
   // - ctrl_word_act[8:0] (9 bits: 0..511) drives the high-speed Sigma-Delta fractional dither
   assign fine_en_comb[7] = (ctrl_word_act[11:10] >= 2'd1);
-  assign fine_en_comb[6] = (ctrl_word_act[11:10] >= 2'd2);
-  assign fine_en_comb[5] = (ctrl_word_act[11:10] == 2'd3);
-  assign fine_en_comb[4] = (ctrl_word_act[11:10] == 2'd3) & ctrl_word_act[9];
-  assign fine_en_comb[3] = ctrl_word_act[9];
-  assign fine_en_comb[2] = ctrl_word_act[9] & ctrl_word_act[8];
-  assign fine_en_comb[1] = ctrl_word_act[9] & ctrl_word_act[8] & ctrl_word_act[7];
-  assign fine_en_comb[0] = ctrl_word_act[9];
+  assign fine_en_comb[6] = (ctrl_word_act[11:10] == 2'd3);
+  assign fine_en_comb[5] = 1'b0;
+  assign fine_en_comb[4] = 1'b0;
+  assign fine_en_comb[3] = (ctrl_word_act[11:10] < 2'd2) & ctrl_word_act[9];
+  assign fine_en_comb[2] = 1'b0;
+  assign fine_en_comb[1] = 1'b0;
+  assign fine_en_comb[0] = (ctrl_word_act[11:10] == 2'd2) | ((ctrl_word_act[11:10] < 2'd2) & ctrl_word_act[9]);
   assign sdm_frac_comb   = ctrl_word_act[8:0];
 
-  // 2-Stage DCO-Clock Synchronizer + Per-Cycle Slew-Rate Limiter + 9-Bit SDM
+  // 2-Stage DCO-Clock Synchronizer + 3-Stage 5+4-Bit Slew-Rate Limiter + 2-Stage Carry-Save 9-Bit SDM
   always_ff @(posedge dco_clk_out or negedge rst_n) begin
     if (!rst_n) begin
       ctrl_word_meta <= 16'h16FF;
       ctrl_word_sync <= 16'h16FF;
       ctrl_top_act   <= 9'h02D;
+      ctrl_dec_src_q <= 9'h02D;
+      slew_phase     <= 2'd0;
       coarse_en      <= 15'h0001;
       fine_en        <= 8'h80;
       sdm_frac       <= 9'h000;
-      sdm_acc        <= 9'h000;
+      sdm_frac_hi_q  <= 4'h0;
+      sdm_acc_lo     <= 5'h00;
+      sdm_acc_hi     <= 4'h0;
+      lo_carry_q     <= 1'b0;
       sdm_carry      <= 1'b0;
     end else begin
       ctrl_word_meta <= ctrl_word;
       ctrl_word_sync <= ctrl_word_meta;
+      coarse_en                   <= coarse_en_comb;
+      fine_en                     <= fine_en_comb;
+      sdm_frac                    <= sdm_frac_comb;
+      sdm_frac_hi_q               <= sdm_frac[8:5];
+      {lo_carry_q, sdm_acc_lo}    <= {1'b0, sdm_acc_lo} + {1'b0, sdm_frac[4:0]};
+      {sdm_carry,  sdm_acc_hi}    <= {1'b0, sdm_acc_hi} + {1'b0, sdm_frac_hi_q} + {4'b0, lo_carry_q};
 
-      // Slew-limit active upper 9 tuning bits by at most +/-1 fine sub-step per DCO cycle
-      if (ctrl_top_act < ctrl_word_sync[15:7]) begin
-        ctrl_top_act <= ctrl_top_act + 9'd1;
-      end else if (ctrl_top_act > ctrl_word_sync[15:7]) begin
-        ctrl_top_act <= ctrl_top_act - 9'd1;
+      if (slew_phase == 2'd0) begin
+        slew_phase <= 2'd1;
+      end else if (slew_phase == 2'd1) begin
+        slew_phase <= 2'd2;
+      end else begin
+        slew_phase <= 2'd0;
+        if (step_up_q) begin
+          ctrl_top_act   <= {ctrl_inc_hi_q, ctrl_inc_lo_q};
+          ctrl_dec_src_q <= {ctrl_inc_hi_q, ctrl_inc_lo_q};
+        end else if (step_dn_q) begin
+          ctrl_top_act   <= {ctrl_dec_hi_q, ctrl_dec_lo_q};
+          ctrl_dec_src_q <= {ctrl_dec_hi_q, ctrl_dec_lo_q};
+        end
       end
+    end
+  end
 
-      coarse_en <= coarse_en_comb;
-      fine_en   <= fine_en_comb;
-      sdm_frac  <= sdm_frac_comb;
-      {sdm_carry, sdm_acc} <= {1'b0, sdm_acc} + {1'b0, sdm_frac};
+  // Reset-free intermediate pipeline registers (written in phase 0 -> phase 1 before phase 2 read;
+  // keeps async rst_n fanout identical to baseline so u_nand_en slew is undisturbed)
+  always_ff @(posedge dco_clk_out) begin
+    if (slew_phase == 2'd0) begin
+      sync_hi_q     <= ctrl_word_sync[15:12];
+      ctrl_inc_lo_q <= ctrl_top_act[4:0] + 5'd1;
+      inc_c_q       <= (ctrl_top_act[4:0] == 5'h1F);
+      ctrl_dec_lo_q <= ctrl_top_act[4:0] - 5'd1;
+      dec_b_q       <= (ctrl_top_act[4:0] == 5'd0);
+      lt_lo_q       <= (ctrl_top_act[4:0] < ctrl_word_sync[11:7]);
+      gt_lo_q       <= (ctrl_top_act[4:0] > ctrl_word_sync[11:7]);
+    end else if (slew_phase == 2'd1) begin
+      ctrl_inc_hi_q <= ctrl_top_act[8:5] + {3'd0, inc_c_q};
+      ctrl_dec_hi_q <= ctrl_top_act[8:5] - {3'd0, dec_b_q};
+      step_up_q     <= (ctrl_top_act[8:5] < sync_hi_q) || ((ctrl_top_act[8:5] == sync_hi_q) && lt_lo_q);
+      step_dn_q     <= (ctrl_top_act[8:5] > sync_hi_q) || ((ctrl_top_act[8:5] == sync_hi_q) && gt_lo_q);
     end
   end
 

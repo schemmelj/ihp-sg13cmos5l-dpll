@@ -7,6 +7,7 @@
 *.bak
 *~
 *.swp
+*.lyrdb
 .DS_Store
 __pycache__/
 !val/sim/*.log

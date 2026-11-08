@@ -23,9 +23,25 @@ module tdc_flash #(
 );
 
   // 1. Tapped Inverter Delay Line (256 stages of 40.0 ps sg13g2_inv_1 cells)
-  // tap[0] is clk_in directly (0 ps delay) to eliminate the input inverter deadband.
+  //    2-stage CTS-matched buffer pair aligns tap[0] insertion delay with the
+  //    2-level DCO CTS clock tree feeding clk_divider across all PVT corners.
+  (* keep = "true" *) wire clk_in_b1;
+  (* keep = "true" *) wire clk_in_matched;
   (* keep = "true" *) wire tap [0:NUM_STAGES];
-  assign tap[0] = clk_in;
+
+  (* dont_touch = "true" *)
+  sg13g2_buf_4 cts_match_b1 (
+    .A (clk_in),
+    .X (clk_in_b1)
+  );
+
+  (* dont_touch = "true" *)
+  sg13g2_buf_8 cts_match_b2 (
+    .A (clk_in_b1),
+    .X (clk_in_matched)
+  );
+
+  assign tap[0] = clk_in_matched;
 
   genvar i;
   generate
@@ -62,9 +78,24 @@ module tdc_flash #(
     end
   end
 
-  // 3. Polarity Normalization, 3-Tap Bubble Suppression & Priority Thermometer Encoder
+  // 3. Polarity Normalization, 3-Tap Bubble Suppression & 8-Level Binary Tree Priority Encoder
   logic [NUM_STAGES-1:0] norm_q;
   logic [NUM_STAGES-1:0] clean_q;
+  logic [255:0]          hit;
+  logic [127:0]          v1;
+  logic                  idx1 [0:127];
+  logic [63:0]           v2;
+  logic [1:0]            idx2 [0:63];
+  logic [31:0]           v3;
+  logic [2:0]            idx3 [0:31];
+  logic [15:0]           v4;
+  logic [3:0]            idx4 [0:15];
+  logic [7:0]            v5;
+  logic [4:0]            idx5 [0:7];
+  logic [3:0]            v6;
+  logic [5:0]            idx6 [0:3];
+  logic [1:0]            v7;
+  logic [6:0]            idx7 [0:1];
   logic [8:0]            edge_pos;
   logic                  edge_found;
   logic [8:0]            edge_pos_clamped;
@@ -72,7 +103,7 @@ module tdc_flash #(
 
   assign quarter_period_steps = half_period_steps >> 1;
 
-  always @(dff_sync_q or half_period_steps or quarter_period_steps) begin
+  always_comb begin
     for (int k = 0; k < NUM_STAGES; k++) begin
       norm_q[k] = (k % 2 == 1) ? ~dff_sync_q[k] : dff_sync_q[k];
     end
@@ -84,26 +115,45 @@ module tdc_flash #(
     end
     clean_q[NUM_STAGES-1] = norm_q[NUM_STAGES-1];
 
-    dco_level  = clean_q[0];
-    edge_pos   = 9'd0;
-    edge_found = 1'b0;
-    if (clean_q[0] == 1'b1) begin
-      // DCO is HIGH: locate first 1 -> 0 transition (most recent rising wavefront)
-      for (int j = 0; j < NUM_STAGES - 1; j++) begin
-        if (!edge_found && (clean_q[j] == 1'b1) && (clean_q[j+1] == 1'b0)) begin
-          edge_pos   = 9'(j);
-          edge_found = 1'b1;
-        end
-      end
-    end else begin
-      // DCO is LOW: locate first 0 -> 1 transition (most recent falling wavefront)
-      for (int j = 0; j < NUM_STAGES - 1; j++) begin
-        if (!edge_found && (clean_q[j] == 1'b0) && (clean_q[j+1] == 1'b1)) begin
-          edge_pos   = 9'(j);
-          edge_found = 1'b1;
-        end
-      end
+    dco_level = clean_q[0];
+
+    // Parallel edge-transition indicator vector (j = 0..254)
+    for (int j = 0; j < 255; j++) begin
+      hit[j] = clean_q[0] ? (clean_q[j] & ~clean_q[j+1]) : (~clean_q[j] & clean_q[j+1]);
     end
+    hit[255] = 1'b0;
+
+    // Balanced 8-level O(log2 N) Find-First-Set binary tree priority encoder
+    for (int n = 0; n < 128; n++) begin
+      v1[n]   = hit[2*n] | hit[2*n+1];
+      idx1[n] = ~hit[2*n];
+    end
+    for (int n = 0; n < 64; n++) begin
+      v2[n]   = v1[2*n] | v1[2*n+1];
+      idx2[n] = v1[2*n] ? {1'b0, idx1[2*n]} : {1'b1, idx1[2*n+1]};
+    end
+    for (int n = 0; n < 32; n++) begin
+      v3[n]   = v2[2*n] | v2[2*n+1];
+      idx3[n] = v2[2*n] ? {1'b0, idx2[2*n]} : {1'b1, idx2[2*n+1]};
+    end
+    for (int n = 0; n < 16; n++) begin
+      v4[n]   = v3[2*n] | v3[2*n+1];
+      idx4[n] = v3[2*n] ? {1'b0, idx3[2*n]} : {1'b1, idx3[2*n+1]};
+    end
+    for (int n = 0; n < 8; n++) begin
+      v5[n]   = v4[2*n] | v4[2*n+1];
+      idx5[n] = v4[2*n] ? {1'b0, idx4[2*n]} : {1'b1, idx4[2*n+1]};
+    end
+    for (int n = 0; n < 4; n++) begin
+      v6[n]   = v5[2*n] | v5[2*n+1];
+      idx6[n] = v5[2*n] ? {1'b0, idx5[2*n]} : {1'b1, idx5[2*n+1]};
+    end
+    for (int n = 0; n < 2; n++) begin
+      v7[n]   = v6[2*n] | v6[2*n+1];
+      idx7[n] = v6[2*n] ? {1'b0, idx6[2*n]} : {1'b1, idx6[2*n+1]};
+    end
+    edge_found = v7[0] | v7[1];
+    edge_pos   = edge_found ? (v7[0] ? {2'b00, idx7[0]} : {2'b01, idx7[1]}) : 9'd0;
 
     if (!edge_found || (edge_pos > half_period_steps)) begin
       edge_pos_clamped = half_period_steps;

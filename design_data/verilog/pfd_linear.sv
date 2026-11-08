@@ -35,6 +35,8 @@ module pfd_linear #(
   // ----------------------------------------------------------------------------
   logic [15:0]        elapsed_cycles;
   logic [15:0]        fine_clamped;
+  logic [8:0]         flash_half_period_w;
+  logic signed [15:0] step_scale_w;
   logic signed [15:0] step_scale;
   logic signed [15:0] frac_comp_steps;
   logic signed [31:0] error_scaled;
@@ -46,12 +48,19 @@ module pfd_linear #(
   logic       flash_near_posedge;
   logic [8:0] flash_half_period;
 
-  // 2-Stage Coarse Phase Synchronizer (Stage 1: posedge ref_clk capture, Stage 2: negedge ref_clk resolve)
+  // 2-Stage Coarse Phase Synchronizer (Stage 1: posedge ref_clk capture, Stage 2: negedge ref_clk resolve + pre-compute)
   logic [DIV_WIDTH-1:0] div_phase_pos_meta, div_phase_pos_sampled;
   logic [DIV_WIDTH-1:0] div_phase_neg_meta, div_phase_neg_sampled;
+  logic [DIV_WIDTH-1:0] div_phase_neg_plus1;
   logic [DIV_WIDTH-1:0] div_ratio_meta, div_ratio_sampled;
   logic [7:0]           fb_sdm_meta, fb_sdm_sampled;
   logic                 valid_meta, valid_reg;
+
+  // Adaptive DCO period scale tracking the active DCO coarse delay index (~otw[15:12]):
+  // Pre-computed during the first half-cycle (posedge -> negedge ref_clk) so the second
+  // half-cycle (negedge -> posedge ref_clk) into loop_filter has minimal combinational depth.
+  assign flash_half_period_w = 9'd25 + ({5'd0, dco_coarse_idx} << 2);
+  assign step_scale_w        = signed'({6'd0, flash_half_period_w, 1'b0});
 
   always_ff @(posedge ref_clk or negedge rst_n) begin
     if (!rst_n) begin
@@ -73,25 +82,29 @@ module pfd_linear #(
     if (!rst_n) begin
       div_phase_pos_sampled <= 10'd0;
       div_phase_neg_sampled <= 10'd0;
+      div_phase_neg_plus1   <= 10'd1;
       div_ratio_sampled     <= 10'd100;
       fb_sdm_sampled        <= 8'd0;
+      flash_half_period     <= 9'd29;
+      step_scale            <= 16'sd58;
+      frac_comp_steps       <= 16'sd0;
+      half_div_ratio        <= 16'd50;
       valid_reg             <= 1'b0;
     end else begin
       div_phase_pos_sampled <= div_phase_pos_meta;
       div_phase_neg_sampled <= div_phase_neg_meta;
+      div_phase_neg_plus1   <= (div_phase_neg_meta >= (div_ratio_meta - 10'd1))
+                               ? 10'd0
+                               : (div_phase_neg_meta + 10'd1);
       div_ratio_sampled     <= div_ratio_meta;
       fb_sdm_sampled        <= fb_sdm_meta;
+      flash_half_period     <= flash_half_period_w;
+      step_scale            <= step_scale_w;
+      frac_comp_steps       <= signed'((16'({8'd0, fb_sdm_meta}) * step_scale_w[15:0]) >> 8);
+      half_div_ratio        <= {6'd0, div_ratio_meta} >> 1;
       valid_reg             <= valid_meta;
     end
   end
-
-  // Adaptive DCO period scale tracking the active DCO coarse delay index (~otw[15:12]):
-  // Each coarse stage adds ~4 TDC inverter delays per half-period (8 per full period),
-  // matching f_DCO across 250-500 MHz and SLOW/TYP/FAST with only 12 logic gates!
-  assign flash_half_period = 9'd25 + ({5'd0, dco_coarse_idx} << 2);
-  assign step_scale        = signed'({6'd0, flash_half_period, 1'b0});
-  assign frac_comp_steps   = signed'((16'({8'd0, fb_sdm_sampled}) * step_scale[15:0]) >> 8);
-  assign half_div_ratio    = {6'd0, div_ratio_sampled} >> 1;
 
   tdc_flash u_flash_tdc (
     .clk_in           (dco_clk),
@@ -104,12 +117,7 @@ module pfd_linear #(
   );
 
   // TDC-Guided Coarse Phase Selection (Eliminates Setup/Hold Violation at Lock):
-  logic [DIV_WIDTH-1:0] div_phase_neg_plus1;
   logic [DIV_WIDTH-1:0] div_phase_selected;
-
-  assign div_phase_neg_plus1 = (div_phase_neg_sampled >= (div_ratio_sampled - 10'd1))
-                               ? 10'd0
-                               : (div_phase_neg_sampled + 10'd1);
 
   always_comb begin
     if (flash_near_posedge) begin
