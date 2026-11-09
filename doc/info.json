@@ -49,7 +49,7 @@
   "top_cell_name": "dpll_testchip_top",
   "release": {
     "version": "v.1.0.0",
-    "gds": "release/v.1.0.0/gds/FMD_QNC_dpll_testchip.gds.gz",
+    "gds": "release/v.1.0.0/gds/PLL3540.gds.gz",
     "netlist": "release/v.1.0.0/netlist/dpll_testchip_schematic.cdl",
     "doc": "release/v.1.0.0/doc"
   },

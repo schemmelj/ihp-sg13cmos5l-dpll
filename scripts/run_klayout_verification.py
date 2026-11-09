@@ -16,8 +16,8 @@ print("=" * 80)
 # 1. Resolve Layout File
 repo_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 gds_candidates = [
-    os.path.join(repo_root, "release", "v.1.0.0", "gds", "FMD_QNC_dpll_testchip.gds.gz"),
-    os.path.join(repo_root, "design_data", "gds", "FMD_QNC_dpll_testchip.gds"),
+    os.path.join(repo_root, "release", "v.1.0.0", "gds", "PLL3540.gds.gz"),
+    os.path.join(repo_root, "design_data", "gds", "PLL3540.gds"),
 ]
 
 gds_path = None

@@ -7,7 +7,7 @@
   - Glitch-free Fractional-N output divider (1 Hz - 500 MHz, programmable duty cycle) + SPI-switchable 2x XOR physical output multiplier (500 MHz - 1.0 GHz).
   - 9 SPI registers (`0x00`..`0x08`) including live `REG_OTW_CUR (0x08)` readback and C99/Arduino `dpll_configure_and_lock()` silicon speed-index calibration (`speed_idx`).
 - **Sign-Off Deliverables:**
-  - Complete tapeout GDSII (`FMD_QNC_dpll_testchip.gds.gz`).
+  - Complete tapeout GDSII (`PLL3540.gds.gz`).
   - Placed and routed DEF (`dpll_testchip.def`).
   - Transistor-level CDL netlist (`dpll_testchip_schematic.cdl`).
   - Synthesizable SystemVerilog RTL source, post-PnR gate netlist (`dpll_testchip_clean.v`), and C/Arduino firmware (`design_data/firmware/`).

@@ -65,11 +65,11 @@ jobs:
         run: |
           set -euo pipefail
           required_files=(
-            "design_data/gds/FMD_QNC_dpll_testchip.gds"
-            "design_data/gds/FMD_QNC_dpll_testchip.gds.gz"
+            "design_data/gds/PLL3540.gds"
+            "design_data/gds/PLL3540.gds.gz"
             "design_data/def/dpll_testchip.def"
             "design_data/cdl/dpll_testchip_schematic.cdl"
-            "release/v.1.0.0/gds/FMD_QNC_dpll_testchip.gds.gz"
+            "release/v.1.0.0/gds/PLL3540.gds.gz"
             "release/v.1.0.0/netlist/dpll_testchip_schematic.cdl"
             "release/v.1.0.0/doc/testchip_documentation.pdf"
             "doc/testchip_documentation.pdf"

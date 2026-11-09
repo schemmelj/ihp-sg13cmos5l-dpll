@@ -60,6 +60,9 @@ module dpll_spi_slave #(
   // DPLL Status Inputs for SPI Readback
   input  logic                 locked,             // Current DPLL Lock Detector status
   input  logic [OTW_WIDTH-1:0] otw_mon = 16'hE900, // Live closed-loop Oscillator Control Word (OTW)
+  input  logic [3:0]           out_mul_cal1_mon = 4'd7, // Monitored Stage 1 calibration code
+  input  logic [3:0]           out_mul_cal2_mon = 4'd7, // Monitored Stage 2 calibration code
+  input  logic                 out_mul_locked = 1'b0,   // Multiplier calibration lock status
 
   // Programmable Core DPLL Parameters
   output logic [OTW_WIDTH-1:0] otw_nominal,        // 16-bit Center Oscillator Tuning Word (for 250-500 MHz DCO)
@@ -75,9 +78,13 @@ module dpll_spi_slave #(
   output logic                 integrator_rst,     // 1-bit Reset Integrator Accumulator
   output logic                 clr_lock,           // 1-bit Control-Domain Lock Clear Pulse
 
-  // Programmable Output Fractional-N Divider, Duty-Cycle & 2x XOR Multiplier Parameters
+  // Programmable Output Fractional-N Divider, Duty-Cycle & 2x/4x Multiplier Parameters
   output logic                 out_div_bypass,     // 1-bit Direct 250-500 MHz Output Bypass
-  output logic                 out_mul2_en,        // 1-bit 2x XOR Output Clock Multiplier Enable
+  output logic                 out_mul2_en,        // 1-bit 2x XOR Output Clock Multiplier Enable (500 MHz - 1.0 GHz)
+  output logic                 out_mul4_en,        // 1-bit 4x XOR Output Clock Multiplier Enable (1.0 GHz - 2.0 GHz)
+  output logic                 out_mul_auto_cal,   // 1-bit Enable Auto-Calibration
+  output logic [3:0]           out_mul_cal1,       // 4-bit Stage 1 manual delay code
+  output logic [3:0]           out_mul_cal2,       // 4-bit Stage 2 manual delay code
   output logic [4:0]           out_prescale_shift, // 5-bit Binary Octave Prescaler S (0..20 -> 2^S)
   output logic [9:0]           out_div_int,        // 10-bit Output Divider Mantissa M_int (1..1023)
   output logic [7:0]           out_div_frac,       // 8-bit Output Divider Fractional Numerator F_frac (0..255)
@@ -113,8 +120,9 @@ module dpll_spi_slave #(
       7'h03:   read_data_mux = {4'b0000, fast_lock_en, fast_lock_mult, gear_shift_thresh};
       7'h05:   read_data_mux = {out_div_bypass, out_prescale_shift, out_div_int};
       7'h06:   read_data_mux = {out_duty, out_div_frac};
-      7'h07:   read_data_mux = {7'h00, out_mul2_en, fb_frac};
+      7'h07:   read_data_mux = {4'h0, out_mul_locked, out_mul_auto_cal, out_mul4_en, out_mul2_en, fb_frac};
       7'h08:   read_data_mux = otw_mon;
+      7'h09:   read_data_mux = {out_mul_cal2_mon, out_mul_cal1_mon, out_mul_cal2, out_mul_cal1};
       default: read_data_mux = {5'h15, locked, div_n};
     endcase
   end
@@ -164,6 +172,10 @@ module dpll_spi_slave #(
       integrator_rst     <= 1'b0;
       out_div_bypass     <= 1'b0;
       out_mul2_en        <= 1'b0;
+      out_mul4_en        <= 1'b0;
+      out_mul_auto_cal   <= 1'b1;
+      out_mul_cal1       <= 4'd7;
+      out_mul_cal2       <= 4'd7;
       out_prescale_shift <= 5'd0;
       out_div_int        <= 10'd10;
       out_div_frac       <= 8'd0;
@@ -241,11 +253,17 @@ module dpll_spi_slave #(
             out_duty     <= next_shift_in[15:8];
           end
           7'h07: begin
-            fb_frac     <= next_shift_in[7:0];
-            out_mul2_en <= next_shift_in[8];
+            fb_frac          <= next_shift_in[7:0];
+            out_mul2_en      <= next_shift_in[8];
+            out_mul4_en      <= next_shift_in[9];
+            out_mul_auto_cal <= (next_shift_in[10] !== 1'b0);
             if (clr_toggle_sck == clr_sync2) begin
               clr_toggle_sck <= ~clr_toggle_sck;
             end
+          end
+          7'h09: begin
+            out_mul_cal1 <= next_shift_in[3:0];
+            out_mul_cal2 <= next_shift_in[7:4];
           end
           default: ;
         endcase

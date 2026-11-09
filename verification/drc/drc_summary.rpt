@@ -2,7 +2,7 @@
 IHP SG13CMOS5L (5-Metal Stack) Full-Chip Foundry DRC Sign-Off Summary
 ================================================================================
 Design Top Cell : dpll_testchip_top
-GDSII File      : design_data/gds/FMD_QNC_dpll_testchip.gds
+GDSII File      : design_data/gds/PLL3540.gds
 Die Dimensions  : 1200.0 x 1200.0 um (1.4400 mm^2)
 Core Dimensions : 544.32 x 544.32 um (0.2963 mm^2)
 Rule Deck       : sg13cmos5l_drc.lydrc / sg13g2_maximal.lydrc ($densityRules = true)

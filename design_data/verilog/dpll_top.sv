@@ -38,15 +38,22 @@ module dpll_top #(
   input  logic                 integrator_rst,     // Synchronous reset of integrator
   input  logic                 clr_lock,           // Control-domain lock clear before parameter change
 
-  // Programmable Output Fractional-N Divider, Duty-Cycle & 2x XOR Multiplier Control
+  // Programmable Output Fractional-N Divider, Duty-Cycle & 2x/4x Multiplier Control
   input  logic                 out_div_bypass,     // 1 = Direct 250-500 MHz DCO pass-through
-  input  logic                 out_mul2_en = 1'b0, // 1 = Enable 2x XOR output frequency multiplier
+  input  logic                 out_mul2_en = 1'b0, // 1 = Enable 2x XOR output frequency multiplier (500 MHz - 1.0 GHz)
+  input  logic                 out_mul4_en = 1'b0, // 1 = Enable 4x XOR output frequency multiplier (1.0 GHz - 2.0 GHz)
+  input  logic                 out_mul_auto_cal = 1'b1, // 1 = Autonomous closed-loop delay calibration
+  input  logic [3:0]           out_mul_cal1 = 4'd7,// Manual Stage 1 delay code override (0..15)
+  input  logic [3:0]           out_mul_cal2 = 4'd7,// Manual Stage 2 delay code override (0..15)
   input  logic [4:0]           out_prescale_shift, // Binary octave prescaler S (0..20 -> 2^S)
   input  logic [9:0]           out_div_int,        // 10-bit integer divisor mantissa M_int (1..1023)
   input  logic [7:0]           out_div_frac,       // 8-bit fractional numerator F_frac (0..255 -> F/256)
   input  logic [7:0]           out_duty,           // 8-bit duty cycle word (1..255, 128 = 50.0%)
 
-  output logic                 dco_clk_out,        // 1 Hz - 1 GHz Synthesized Output Clock
+  output logic [3:0]           out_mul_cal1_mon,   // Monitored active Stage 1 delay code (0..15)
+  output logic [3:0]           out_mul_cal2_mon,   // Monitored active Stage 2 delay code (0..15)
+  output logic                 out_mul_locked,     // 1 = Calibration locked on active multiplier stage
+  output logic                 dco_clk_out,        // 1 Hz - 2.0 GHz Synthesized Output Clock
   output logic                 locked,             // PLL Lock Status flag
   output logic [OTW_WIDTH-1:0] otw_mon             // Live closed-loop Oscillator Control Word monitor
 );
@@ -187,21 +194,37 @@ module dpll_top #(
     .fb_sdm_phase (fb_sdm_phase)
   );
 
-  // 5. Synthesizable Glitch-Free Output Fractional-N Divider, Duty-Cycle & 2x XOR Multiplier
+  logic clk_out_base;
+
+  // 5. Synthesizable Glitch-Free Output Fractional-N Divider & Duty-Cycle Shaper
   frac_n_out_divider u_out_div (
     .clk_dco           (dco_clk_500m),
     .rst_n             (rst_n_dco_sync),
     .rst_n_async       (rst_n),
     .out_div_bypass    (out_div_bypass),
-    .out_mul2_en       (out_mul2_en),
     .out_prescale_shift(out_prescale_shift),
     .out_div_int       (out_div_int),
     .out_div_frac      (out_div_frac),
     .out_duty          (out_duty),
+    .clk_out           (clk_out_base)
+  );
+
+  // 6. Synthesizable Calibratable Cascaded 2x/4x Clock Multiplier (500 MHz - 2.0 GHz)
+  clk_freq_multiplier u_out_mul (
+    .clk_in            (clk_out_base),
+    .rst_n_async       (rst_n),
+    .out_mul2_en       (out_mul2_en),
+    .out_mul4_en       (out_mul4_en),
+    .out_mul_auto_cal  (out_mul_auto_cal),
+    .out_mul_cal1      (out_mul_cal1),
+    .out_mul_cal2      (out_mul_cal2),
+    .out_mul_cal1_mon  (out_mul_cal1_mon),
+    .out_mul_cal2_mon  (out_mul_cal2_mon),
+    .out_mul_locked    (out_mul_locked),
     .clk_out           (dco_clk_out)
   );
 
-  // 6. Synthesizable Lock Detector with Hysteresis
+  // 7. Synthesizable Lock Detector with Hysteresis
   lock_detector u_lock_det (
     .clk        (ref_clk),
     .rst_n      (rst_n_sync),

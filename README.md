@@ -36,8 +36,8 @@ This repository adheres to the standard IHP open-source submission layout:
 ├── README.md                        # Project overview, pinout, and sign-off scorecard
 ├── design_data/                     # Primary chip design files
 │   ├── gds/
-│   │   ├── FMD_QNC_dpll_testchip.gds      # Complete full-chip GDSII layout (74 MB)
-│   │   └── FMD_QNC_dpll_testchip.gds.gz   # Gzip-compressed GDSII (IHP shuttle delivery)
+│   │   ├── PLL3540.gds                    # Complete full-chip GDSII layout (74 MB)
+│   │   └── PLL3540.gds.gz                 # Gzip-compressed GDSII (IHP shuttle delivery)
 │   ├── def/
 │   │   └── dpll_testchip.def              # Placed and routed DEF netlist
 │   ├── cdl/

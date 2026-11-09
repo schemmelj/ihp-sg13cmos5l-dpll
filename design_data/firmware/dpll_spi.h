@@ -48,8 +48,9 @@ extern "C" {
 #define DPLL_REG_STATUS             (0x04u) /**< [15:11] 0x15 magic, [10] locked, [9:0] div_n (Read-Only) */
 #define DPLL_REG_OUT_DIV1           (0x05u) /**< [15] out_div_bypass, [14:10] out_prescale_shift, [9:0] out_div_int */
 #define DPLL_REG_OUT_DIV2           (0x06u) /**< [15:8] out_duty (128 = 50%), [7:0] out_div_frac */
-#define DPLL_REG_FB_FRAC            (0x07u) /**< [8] out_mul2_en, [7:0] fb_frac (F_fb / 256) */
+#define DPLL_REG_FB_FRAC            (0x07u) /**< [11] out_mul_locked, [10] auto_cal, [9] out_mul4_en, [8] out_mul2_en, [7:0] fb_frac */
 #define DPLL_REG_OTW_CUR            (0x08u) /**< [15:0] Live closed-loop OTW readback (Read-Only) */
+#define DPLL_REG_MUL_CAL            (0x09u) /**< [15:12] cal2_mon, [11:8] cal1_mon, [7:4] cal2, [3:0] cal1 (Calibratable 2x/4x Multiplier) */
 
 /** Calibrated Silicon Speed Index Constants (0 = uncalibrated / Typical corner default) */
 #define DPLL_SPEED_UNCALIBRATED     (0)

@@ -1,30 +1,25 @@
 // ==============================================================================
 // File: frac_n_out_divider.sv
-// Description: Wide-Range Glitch-Free Fractional-N Output Clock Divider,
-//              Programmable Duty-Cycle Shaper, and SPI-Switchable 2x XOR
-//              Clock Multiplier Coupled with 250-500 MHz DCO
+// Description: Wide-Range Glitch-Free Fractional-N Output Clock Divider &
+//              Programmable Duty-Cycle Shaper Coupled with 250-500 MHz DCO
 //              - Input DCO Frequency Range: 250 MHz to 500 MHz (1 Octave)
-//              - Output Frequency Range: 1 Hz to 500 MHz (up to 1 GHz in 2x XOR mode)
+//              - Output Frequency Range: 1 Hz to 500 MHz (Direct / Frac-N)
 //              - Relative Frequency Granularity: < 0.4% (<= 1% requirement)
 //                across the entire 1 Hz to 500 MHz span
 //              - Programmable Duty Cycle: 1/256 to 255/256 for all f_out < 100 MHz
-//              - SPI-Switchable 2x XOR Clock Multiplier (out_mul2_en):
-//                * 12-stage SG13G2 buffer delay line (tau_d ~ 940 ps in TYP) +
-//                  sg13g2_xor2_1 edge doubler + glitch-free sg13g2_mux2_2 selector
-//              - 100% Glitch-Free Frequency, Duty-Cycle & 2x-Multiplier Switching
+//              - 100% Glitch-Free Frequency & Duty-Cycle Switching
 // ==============================================================================
 
 module frac_n_out_divider (
-  input  logic       clk_dco,             // 250 - 500 MHz DCO clock
-  input  logic       rst_n,               // Active-low reset (synchronized to clk_dco)
-  input  logic       rst_n_async = 1'b1,  // Active-low asynchronous external reset for clk_base sync
-  input  logic       out_div_bypass,      // 1 = Direct DCO pass-through (250..500 MHz)
-  input  logic       out_mul2_en = 1'b0,  // 1 = Enable 2x XOR output frequency multiplier
-  input  logic [4:0] out_prescale_shift,  // Binary octave prescaler S (0..20 -> 2^S)
-  input  logic [9:0] out_div_int,         // 10-bit integer divisor mantissa M_int (1..1023)
-  input  logic [7:0] out_div_frac,        // 8-bit fractional numerator F_frac (0..255 -> F/256)
-  input  logic [7:0] out_duty,            // 8-bit duty cycle word (1..255, 128 = 50.0%)
-  output logic       clk_out              // Synthesized output clock (1 Hz .. 500 MHz / 2x XOR)
+  input  logic       clk_dco,                 // 250 - 500 MHz DCO clock
+  input  logic       rst_n,                   // Active-low reset (synchronized to clk_dco)
+  input  logic       rst_n_async = 1'b1,      // Active-low asynchronous external reset
+  input  logic       out_div_bypass,          // 1 = Direct DCO pass-through (250..500 MHz)
+  input  logic [4:0] out_prescale_shift,      // Binary octave prescaler S (0..20 -> 2^S)
+  input  logic [9:0] out_div_int,             // 10-bit integer divisor mantissa M_int (1..1023)
+  input  logic [7:0] out_div_frac,            // 8-bit fractional numerator F_frac (0..255 -> F/256)
+  input  logic [7:0] out_duty,                // 8-bit duty cycle word (1..255, 128 = 50.0%)
+  output logic       clk_out                  // Synthesized output clock (1 Hz .. 500 MHz)
 );
 
   // Local replicated reset leaf registers (~35 FFs each) for 500 MHz recovery closure
@@ -1006,59 +1001,6 @@ module frac_n_out_divider (
     .A0 (div_clk_reg),
     .A1 (clk_dco_mux),
     .S  (pass_dco_clk),
-    .X  (clk_base)
-  );
-
-  // ----------------------------------------------------------------------------
-  // 6. SPI-Switchable 2x XOR Clock Multiplier (u_xor_dly + u_xor_mul2 + u_mul2_mux)
-  //    Doubles the physical output frequency (f_out = 2 * f_base, reaching
-  //    500 MHz to 1.0 GHz from the 250-500 MHz DCO) by XORing clk_base with
-  //    a 6-stage SG13G2 buffer-delayed replica (tau_d ~ 460 ps in TYP, ~330 ps
-  //    in FAST, ~635 ps in SLOW — safely supporting 1.0 GHz across all corners).
-  //    Glitch-free switching: mul2_act updates on posedge clk_base (t_clk2q ~ 160 ps),
-  //    strictly inside the [0, tau_d] window where both A0 (clk_base = 1) and
-  //    A1 (clk_base ^ 0 = 1) are at logic HIGH (1'b1).
-  // ----------------------------------------------------------------------------
-  localparam int XOR_DLY_STAGES = 6;
-  (* keep = "true" *) logic xor_dly [0:XOR_DLY_STAGES];
-  (* keep = "true" *) logic clk_xor_2x;
-  logic mul2_meta, mul2_act;
-
-  always_ff @(posedge clk_base or negedge rst_n_async) begin
-    if (!rst_n_async) begin
-      mul2_meta <= 1'b0;
-      mul2_act  <= 1'b0;
-    end else begin
-      mul2_meta <= out_mul2_en;
-      mul2_act  <= mul2_meta;
-    end
-  end
-
-  assign xor_dly[0] = clk_base;
-
-  genvar g_xd;
-  generate
-    for (g_xd = 0; g_xd < XOR_DLY_STAGES; g_xd++) begin : gen_xor_dly
-      (* dont_touch = "true" *)
-      sg13g2_buf_1 u_xd_buf (
-        .A (xor_dly[g_xd]),
-        .X (xor_dly[g_xd+1])
-      );
-    end
-  endgenerate
-
-  (* dont_touch = "true" *)
-  sg13g2_xor2_1 u_xor_mul2 (
-    .A (clk_base),
-    .B (xor_dly[XOR_DLY_STAGES]),
-    .X (clk_xor_2x)
-  );
-
-  (* dont_touch = "true" *)
-  sg13g2_mux2_2 u_mul2_mux (
-    .A0 (clk_base),
-    .A1 (clk_xor_2x),
-    .S  (mul2_act),
     .X  (clk_out)
   );
 

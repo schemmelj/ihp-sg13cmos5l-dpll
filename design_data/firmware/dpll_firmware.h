@@ -33,8 +33,9 @@ extern "C" {
 #define DPLL_REG_STATUS             (0x04u)  // [15:11] 5'h15 magic, [10] locked, [9:0] div_n (Read-Only)
 #define DPLL_REG_OUT_DIV1           (0x05u)  // [15] out_div_bypass, [14:10] out_prescale_shift, [9:0] out_div_int
 #define DPLL_REG_OUT_DIV2           (0x06u)  // [15:8] out_duty, [7:0] out_div_frac
-#define DPLL_REG_FB_FRAC            (0x07u)  // [8] out_mul2_en, [7:0] fb_frac
+#define DPLL_REG_FB_FRAC            (0x07u)  // [11] out_mul_locked, [10] auto_cal, [9] out_mul4_en, [8] out_mul2_en, [7:0] fb_frac
 #define DPLL_REG_OTW_CUR            (0x08u)  // [15:0] otw_mon live closed-loop OTW readback (Read-Only)
+#define DPLL_REG_MUL_CAL            (0x09u)  // [15:12] cal2_mon, [11:8] cal1_mon, [7:4] cal2, [3:0] cal1
 
 // ------------------------------------------------------------------------------
 // 2. Silicon Speed Index Constants (Calibrated to Post-Layout Extracted Chip)
@@ -80,9 +81,13 @@ typedef struct {
     uint8_t  fast_lock_mult;      // REG_GEAR_CFG[10:8]: Fast-lock boost multiplier (1..7)
     uint8_t  gear_shift_thresh;   // REG_GEAR_CFG[7:0]: Phase error threshold for gear shift
 
-    // Glitch-Free Output Fractional-N Divider, Duty Shaper & 2x-XOR Multiplier
+    // Glitch-Free Output Fractional-N Divider, Duty Shaper & 2x/4x Multiplier
     bool     out_div_bypass;      // REG_OUT_DIV1[15]: 1 = Direct 250-500 MHz DCO bypass
-    bool     out_mul2_en;         // REG_FB_FRAC[8]:   1 = Enable 2x-XOR frequency doubler
+    bool     out_mul2_en;         // REG_FB_FRAC[8]:   1 = Enable 2x-XOR frequency doubler (500 MHz - 1.0 GHz)
+    bool     out_mul4_en;         // REG_FB_FRAC[9]:   1 = Enable 4x-XOR frequency quadrupler (1.0 GHz - 2.0 GHz)
+    bool     out_mul_auto_cal;    // REG_FB_FRAC[10]:  1 = Enable auto-calibration (default: true)
+    uint8_t  out_mul_cal1;        // REG_MUL_CAL[3:0]: Stage 1 manual delay code (0..15)
+    uint8_t  out_mul_cal2;        // REG_MUL_CAL[7:4]: Stage 2 manual delay code (0..15)
     uint8_t  out_prescale_shift;  // REG_OUT_DIV1[14:10]: Octave prescaler S (0..20 -> 2^S)
     uint16_t out_div_int;         // REG_OUT_DIV1[9:0]: Integer divisor M_int (1..1023)
     uint8_t  out_div_frac;        // REG_OUT_DIV2[7:0]: Fractional divisor F_frac (0..255)
