@@ -2,7 +2,7 @@
 
 Open-source tapeout repository for the **$1200\,\mu\text{m} \times 1200\,\mu\text{m}$ All-Digital Phase-Locked Loop (ADPLL) Testchip (`PLL3540`)**, fully synthesized and hardened in the **IHP 130nm CMOS SG13CMOS5L (5-Metal Stack)** open-source technology.
 
-Developed in strict accordance with the **IHP Open-Silicon-MPW Specifications** (`gen_structure.py` generator, July-2026 Mixed-Signal IP category conventions).
+Developed in strict accordance with the **IHP Open-Silicon-MPW Specifications** (`gen_structure.py` generator, November-2026 Mixed-Signal IP category conventions).
 
 ---
 
