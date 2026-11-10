@@ -1,5 +1,5 @@
 {
-  "name": "dpll_testchip",
+  "name": "PLL3540",
   "design_type": "M",
   "technology": "IHP",
   "category": "Mixed-Signal",
@@ -32,7 +32,7 @@
       "dependencies": {}
     },
     "OUT_DIVIDER": {
-      "type": "Glitch-free Fractional-N output divider (1 Hz - 500 MHz, programmable duty cycle) + 2x XOR multiplier (500 MHz - 1.0 GHz)",
+      "type": "Glitch-free Fractional-N output divider (1 Hz - 500 MHz, programmable duty cycle) + 2x/4x XOR multiplier (500 MHz - 2.0 GHz)",
       "dependencies": {}
     },
     "SPI_SLAVE": {
@@ -46,11 +46,11 @@
     "KLayout": "0.28.16 (Foundry DRC & Transistor-Level LVS)",
     "Icarus_Verilog": "v12 (6-Corner Back-Annotated SDF & Pre-Layout Dynamic Verification)"
   },
-  "top_cell_name": "dpll_testchip_top",
+  "top_cell_name": "PLL3540",
   "release": {
     "version": "v.1.0.0",
     "gds": "release/v.1.0.0/gds/PLL3540.gds.gz",
-    "netlist": "release/v.1.0.0/netlist/dpll_testchip_schematic.cdl",
+    "netlist": "release/v.1.0.0/netlist/PLL3540.cdl",
     "doc": "release/v.1.0.0/doc"
   },
   "density": {
@@ -76,7 +76,7 @@
     "equiv_cells_proven": 9418,
     "equiv_cells_unproven": 0
   },
-  "unique_id": "0001",
+  "unique_id": "3540",
   "sealring_x": 1200.0,
   "sealring_y": 1200.0,
   "pdk_version": "5e6d592e4002946a4616f798c357f0f3c06cf3b6",

@@ -50,8 +50,8 @@ print(f"Dimensions    : {chip_w:.1f} x {chip_h:.1f} um (Area: {chip_area/1e6:.4f
 # Verification asserts
 failures = []
 
-if top_cell_name != "dpll_testchip_top":
-    failures.append(f"Unexpected top cell: {top_cell_name} (expected dpll_testchip_top)")
+if top_cell_name not in ["PLL3540", "dpll_testchip_top"]:
+    failures.append(f"Unexpected top cell: {top_cell_name} (expected PLL3540)")
 
 if abs(chip_w - 1200.0) > 1.0 or abs(chip_h - 1200.0) > 1.0:
     failures.append(f"Invalid die size: {chip_w}x{chip_h} um (expected 1200x1200 um)")

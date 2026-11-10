@@ -1,8 +1,8 @@
-# IHP SG13CMOS5L Standalone DPLL Testchip Tapeout Package
+# IHP SG13CMOS5L Standalone DPLL Testchip Tapeout Package (`IHP__PLL3540`)
 
-Open-source tapeout repository for the **$1200\,\mu\text{m} \times 1200\,\mu\text{m}$ All-Digital Phase-Locked Loop (ADPLL) Testchip (`dpll_testchip_top`)**, fully synthesized and hardened in the **IHP 130nm CMOS SG13CMOS5L (5-Metal Stack)** open-source technology.
+Open-source tapeout repository for the **$1200\,\mu\text{m} \times 1200\,\mu\text{m}$ All-Digital Phase-Locked Loop (ADPLL) Testchip (`PLL3540`)**, fully synthesized and hardened in the **IHP 130nm CMOS SG13CMOS5L (5-Metal Stack)** open-source technology.
 
-Developed in accordance with the **IHP Open-Source Tapeout Specifications** (`IHP-Open-DesignLib` / `FMD_QNC` guidelines).
+Developed in strict accordance with the **IHP Open-Silicon-MPW Specifications** (`gen_structure.py` generator, July-2026 Mixed-Signal IP category conventions).
 
 ---
 
@@ -10,13 +10,14 @@ Developed in accordance with the **IHP Open-Source Tapeout Specifications** (`IH
 
 | Parameter | Value | Unit | Description |
 |:---|:---:|:---:|:---|
+| **IP Identifier** | `PLL3540` | - | MPW Category: `Mixed-Signal` / Subcategory: `Phase-Locked Loop` |
 | **Process Node** | IHP SG13CMOS5L | - | 130 nm CMOS (5 Metal Layers: M1-M4 + TopMetal1 thickness $2.0\,\mu\text{m}$) |
 | **Chip Dimensions** | $1200 \times 1200$ | $\mu\text{m}$ | Includes standard perimeter sealring ($1.440\,\text{mm}^2$) |
 | **Core Dimensions** | $544.32 \times 544.32$ | $\mu\text{m}$ | Standard-cell core (`[332.64, 332.64]` to `[876.96, 876.96]`, $0.2963\,\text{mm}^2$) |
 | **Cell Count** | $11,239$ (synth) / $12,117$ (post-route) | cells | 100% standard cells, zero custom analog primitives |
 | **Reference Clock ($f_{\text{ref}}$)** | $1.0 - 10.0$ ($1.0$ nom) | $\text{MHz}$ | Single-ended CMOS reference input |
 | **Internal DCO Range ($f_{\text{dco}}$)** | $250.0 - 500.0$ | $\text{MHz}$ | 1-octave Vernier ring DCO across all PVT corners |
-| **Output Frequency ($f_{\text{out}}$)** | $1\,\text{Hz} - 500\,\text{MHz}$ / $500\,\text{MHz} - 1.0\,\text{GHz}$ | - | Glitch-free Fractional-N divider + $2\times$ XOR multiplier |
+| **Output Frequency ($f_{\text{out}}$)** | $1\,\text{Hz} - 500\,\text{MHz}$ / $500\,\text{MHz} - 2.0\,\text{GHz}$ | - | Glitch-free Fractional-N divider + $2\times$/$4\times$ XOR multiplier |
 | **Feedback Divider ($N_{\text{eff}}$)** | $N_{\text{int}} \in [25, 500] + F_{\text{fb}}/256$ | - | Coupled integer + 8-bit $\Delta\Sigma$ fractional feedback divider |
 | **Quantization Step ($t_{\text{LSB}}$)** | $39.5$ (typ) / $28.5$ (fast) / $54.5$ (slow) | $\text{ps}$ | 256-stage Flash Inverter Delay Line TDC |
 | **Speed-Index Calibration** | `REG_OTW_CUR (0x08)` readback | - | 1-lock silicon calibration (`speed_idx`), 0 LSB OTW prediction error |
@@ -29,63 +30,50 @@ Developed in accordance with the **IHP Open-Source Tapeout Specifications** (`IH
 
 ## 2. Repository Structure
 
-This repository adheres to the standard IHP open-source submission layout:
+This repository adheres to the standard IHP Open-Silicon-MPW generated structure (`gen_structure.py`):
 
 ```text
 ├── LICENSE                          # Apache-2.0 open-source license
 ├── README.md                        # Project overview, pinout, and sign-off scorecard
-├── design_data/                     # Primary chip design files
-│   ├── gds/
-│   │   ├── PLL3540.gds                    # Complete full-chip GDSII layout (74 MB)
-│   │   └── PLL3540.gds.gz                 # Gzip-compressed GDSII (IHP shuttle delivery)
-│   ├── def/
-│   │   └── dpll_testchip.def              # Placed and routed DEF netlist
-│   ├── cdl/
-│   │   └── dpll_testchip_schematic.cdl    # Transistor-level CDL schematic netlist
-│   ├── verilog/                           # Synthesizable SystemVerilog RTL & gate-level netlists
-│   │   ├── dpll_testchip_top.sv           # Chip top-level module with 16-pad ring
-│   │   ├── dpll_spi_slave.sv              # Asynchronous SPI Mode 0 slave (registers 0x00-0x08)
-│   │   ├── dpll_clk_out_buffer.sv         # 4-stage 50-Ohm matched output clock buffer
-│   │   ├── dpll_top.sv                    # DPLL core top-level with 2x XOR multiplier
-│   │   ├── frac_n_out_divider.sv          # Glitch-free Fractional-N output divider (1 Hz - 500 MHz)
-│   │   ├── dco_nco.sv                     # 3-head + 15-coarse + 8-fine + 1-SDM Vernier DCO
-│   │   ├── pfd_linear.sv                  # Linear Phase Frequency Detector
-│   │   ├── tdc_flash.sv                   # 256-stage Flash Inverter Delay-Line TDC
-│   │   ├── loop_filter.sv                 # PI digital loop filter with gear-shifting
-│   │   ├── clk_divider.sv                 # Coupled Fractional-N feedback divider
-│   │   ├── lock_detector.sv               # Digital windowed lock detector
-│   │   ├── dpll_pkg.sv                    # Configuration package
-│   │   ├── dpll_testchip_clean.v          # Full post-PnR back-annotated gate-level netlist
-│   │   └── dpll_testchip.v                # Full post-PnR gate-level netlist
-│   └── firmware/                          # Embedded C/C++ & Arduino calibration driver
-│       ├── dpll_firmware.h                # Parameter synthesis & speed-index calibration API
-│       ├── dpll_firmware.c                # Integer-only parameter generator & calibration implementation
-│       ├── dpll_spi.h                     # Portable C99 SPI driver header
-│       └── dpll_arduino_example/          # Complete Arduino sketch with serial CLI & auto-calibration
-├── doc/                             # Comprehensive documentation
-│   ├── README.md                    # Documentation summary
-│   ├── info.json                    # IHP MPW IP metadata
+├── PLL3540-main/                    # Canonical cell structure (all design views)
+│   ├── layout/                      # Layout streams (GDS, DEF, LEF)
+│   │   ├── klayout/PLL3540.gds      # Complete full-chip GDSII layout (top cell: PLL3540)
+│   │   └── def/PLL3540.def          # Placed and routed DEF netlist
+│   ├── netlist/                     # CDL & spice netlists
+│   │   └── schematic/PLL3540.cdl    # Transistor-level schematic netlist (.SUBCKT PLL3540)
+│   ├── verification/                # DRC, density, and LVS sign-off verification reports
+│   │   ├── drc/drc_summary.rpt
+│   │   ├── drc/density_summary.rpt
+│   │   └── lvs/lvs_summary.rpt
+│   └── README.md
+├── dependencies/                    # Sub-cell modular hierarchy (DCO, TDC, LOOP_FILTER, etc.)
+│   ├── DCO/
+│   ├── TDC/
+│   ├── LOOP_FILTER/
+│   ├── FB_DIVIDER/
+│   ├── OUT_DIVIDER/
+│   └── SPI_SLAVE/
+├── measurements/                    # Silicon validation & lab characterization data
+│   └── v.1.0.0/
+├── doc/                             # Comprehensive documentation & metadata
+│   ├── info.json                    # IHP MPW IP metadata (name: PLL3540, unique_id: 3540)
 │   ├── Specification.md             # Electrical & physical specification
 │   ├── Datasheet.md                 # Feature overview and compliance datasheet
+│   ├── TRL-Mixed-Signal-IP.md       # TRL-5 self-assessment quality checklist
 │   ├── pinout.md                    # Detailed padring bonding and coordinate mapping
 │   ├── testchip_documentation.pdf   # Complete standalone testchip documentation manual
 │   └── figures/                     # High-resolution architectural, simulation, and layout figures
 ├── release/v.1.0.0/                 # Immutable versioned tapeout release package
-└── val/                             # Physical and dynamic sign-off verification data
-    ├── README.md                    # Validation summary
-    ├── drc/
-    │   ├── drc_summary.rpt          # KLayout SG13CMOS5L DRC sign-off: 0 errors
-    │   └── density_summary.rpt      # Global & window density verification report (100% pass)
-    ├── lvs/
-    │   └── lvs_summary.rpt          # KLayout transistor-level LVS sign-off: MATCH (0 diff)
-    └── sim/
-        ├── testchip_sim_results.json# 6-corner dynamic simulation results & speed calibration
-        ├── sim_typ.log              # Post-layout Typical corner SDF simulation log (15/15 PASS)
-        ├── sim_fast.log             # Post-layout Fast corner SDF simulation log (15/15 PASS)
-        ├── sim_slow.log             # Post-layout Slow corner SDF simulation log (15/15 PASS)
-        ├── sim_synth_typ.log        # Pre-layout Typical corner SDF simulation log (15/15 PASS)
-        ├── sim_synth_fast.log       # Pre-layout Fast corner SDF simulation log (15/15 PASS)
-        └── sim_synth_slow.log       # Pre-layout Slow corner SDF simulation log (15/15 PASS)
+│   ├── gds/PLL3540.gds.gz           # Gzip-compressed GDSII (top cell: PLL3540, no context info)
+│   ├── netlist/PLL3540.cdl          # Top-level schematic CDL (.SUBCKT PLL3540)
+│   ├── doc/testchip_documentation.pdf
+│   └── ReleaseNote.md               # Version release notes
+├── design_data/                     # Legacy source and simulation collateral
+├── val/                             # Verification logs and multi-corner sign-off data
+└── scripts/                         # Verification runners & structure generators
+    ├── run_klayout_verification.py  # Automated KLayout DRC, density, sealring & pin integrity runner
+    ├── gen_structure.py             # Official IHP MPW structure generator
+    └── ip-categories.json           # IHP category registry
 ```
 
 ---
