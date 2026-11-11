@@ -1,0 +1,107 @@
+# SPDX-License-Identifier: Apache-2.0
+
+name: DRC & LVS Verification
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify-signoff-reports:
+    name: Verify DRC & LVS Sign-Off Reports
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check Foundry DRC Sign-Off
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== Checking Foundry DRC Summary ==="
+          grep -E "Number of DRC errors:\s*0|Total DRC Errors:\s*0" val/drc/drc_summary.rpt
+          grep -E "Sign-Off Status\s*:\s*PASS" val/drc/drc_summary.rpt
+          echo "[PASS] Foundry DRC: 0 errors verified."
+
+      - name: Check Transistor-Level LVS Sign-Off
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== Checking Transistor-Level LVS Summary ==="
+          grep -F "INFO : Congratulations! Netlists match." val/lvs/lvs_summary.rpt
+          echo "[PASS] Transistor-Level LVS: Netlists match verified."
+
+      - name: Check Layer Density Sign-Off
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "=== Checking Global & Window Layer Density Summary ==="
+          grep -F "Overall Sign-off Status: 100% PASS" val/drc/density_summary.rpt
+          echo "[PASS] Layer Density: 100% PASS verified."
+
+  verify-deliverables-and-gds:
+    name: Verify GDS & Netlist Deliverables Integrity
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Release Artifacts and Info Metadata
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - << 'PY'
+          import json, os, sys, gzip, struct, re
+
+          # 1. Validate doc/info.json schema
+          with open("doc/info.json") as f:
+              d = json.load(f)
+          for k in ["name", "design_type", "technology", "unique_id", "license", "sealring_x", "sealring_y", "top_cell_name", "release"]:
+              if not d.get(k):
+                  print(f"ERROR: Missing required field in info.json: {k}", file=sys.stderr)
+                  sys.exit(1)
+          print(f"[PASS] doc/info.json: Validated schema for {d['name']} (ID {d['unique_id']})")
+
+          # 2. Check GDS release file exists and is non-empty
+          gds_path = os.path.join(d["release"]["gds"], f"{d['name']}.gds.gz")
+          if not os.path.isfile(gds_path) or os.path.getsize(gds_path) == 0:
+              print(f"ERROR: GDS file missing or empty: {gds_path}", file=sys.stderr)
+              sys.exit(1)
+          print(f"[PASS] Release GDS: Found {gds_path} ({os.path.getsize(gds_path)/1024/1024:.2f} MB)")
+
+          # 3. Check GDS root cell and ensure no context info
+          cells = []
+          with gzip.open(gds_path, "rb") as f:
+              while True:
+                  hdr = f.read(4)
+                  if len(hdr) < 4: break
+                  length, rectype = struct.unpack(">HH", hdr)
+                  data = f.read(length - 4)
+                  if rectype == 0x0606: # STRNAME
+                      cells.append(data.rstrip(b"\x00").decode("ascii", errors="ignore"))
+
+          if cells[-1] != d["name"]:
+              print(f"ERROR: GDS top cell is {cells[-1]}, expected {d['name']}", file=sys.stderr)
+              sys.exit(1)
+          if "$$$CONTEXT_INFO$$$" in cells:
+              print("ERROR: Forbidden $$$CONTEXT_INFO$$$ cell found in GDS", file=sys.stderr)
+              sys.exit(1)
+          print(f"[PASS] GDS Structure: Root cell '{cells[-1]}' verified. Clean KLayout export (no context info).")
+
+          # 4. Check CDL netlist
+          netlist_path = os.path.join(d["release"]["netlist"], f"{d['name']}.cdl")
+          if not os.path.isfile(netlist_path) or os.path.getsize(netlist_path) == 0:
+              print(f"ERROR: Netlist file missing or empty: {netlist_path}", file=sys.stderr)
+              sys.exit(1)
+          with open(netlist_path) as f:
+              cdl_content = f.read()
+          if not re.search(rf"^\.SUBCKT\s+{d['name']}\b", cdl_content, re.MULTILINE | re.IGNORECASE):
+              print(f"ERROR: .SUBCKT {d['name']} not found in {netlist_path}", file=sys.stderr)
+              sys.exit(1)
+          print(f"[PASS] Release Netlist: Found {netlist_path} with .SUBCKT {d['name']}")
+
+          print("All GDS and Netlist verification checks: 100% PASS!")
+          PY
