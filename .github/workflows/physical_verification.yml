@@ -51,20 +51,35 @@ jobs:
             exit 1
           fi
 
-          if [[ ! -f "$GDS_PATH" ]]; then
-            echo "::error::release.gds references a missing file: $GDS_PATH"
+          if [[ -d "$GDS_PATH" ]]; then
+            GDS_FILE=$(find "$GDS_PATH" -maxdepth 1 -name "*.gds*" | head -n 1)
+          else
+            GDS_FILE="$GDS_PATH"
+          fi
+
+          if [[ -z "$GDS_FILE" || ! -f "$GDS_FILE" ]]; then
+            echo "::error::release.gds references a missing file or empty directory: $GDS_PATH"
             exit 1
           fi
 
-          if [[ -n "$NETLIST_PATH" && "$NETLIST_PATH" != "null" && ! -f "$NETLIST_PATH" ]]; then
-            echo "::error::release.netlist references a missing file: $NETLIST_PATH"
-            exit 1
+          if [[ -n "$NETLIST_PATH" && "$NETLIST_PATH" != "null" ]]; then
+            if [[ -d "$NETLIST_PATH" ]]; then
+              NETLIST_FILE=$(find "$NETLIST_PATH" -maxdepth 1 \( -name "*.cdl*" -o -name "*.spice*" -o -name "*.sp*" \) | head -n 1)
+            else
+              NETLIST_FILE="$NETLIST_PATH"
+            fi
+            if [[ -z "$NETLIST_FILE" || ! -f "$NETLIST_FILE" ]]; then
+              echo "::error::release.netlist references a missing file or empty directory: $NETLIST_PATH"
+              exit 1
+            fi
+          else
+            NETLIST_FILE=""
           fi
 
-          echo "gds_path=$GDS_PATH" >> "$GITHUB_OUTPUT"
-          echo "netlist_path=$NETLIST_PATH" >> "$GITHUB_OUTPUT"
-          echo "Found valid release GDS: $GDS_PATH"
-          echo "Found valid release netlist: $NETLIST_PATH"
+          echo "gds_path=$GDS_FILE" >> "$GITHUB_OUTPUT"
+          echo "netlist_path=$NETLIST_FILE" >> "$GITHUB_OUTPUT"
+          echo "Found valid release GDS: $GDS_FILE"
+          echo "Found valid release netlist: $NETLIST_FILE"
 
       - name: Run KLayout Physical Verification Suite
         shell: bash
