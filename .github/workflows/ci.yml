@@ -30,7 +30,7 @@ jobs:
               sys.exit(1)
 
           data = json.loads(info_path.read_text(encoding="utf-8"))
-          required_fields = ["name", "design_type", "technology", "unique_id", "category", "subcategory", "process", "sealring_x", "sealring_y", "top_cell_name", "release"]
+          required_fields = ["name", "design_type", "technology", "unique_id", "license", "process", "sealring_x", "sealring_y", "top_cell_name", "release"]
           missing = [f for f in required_fields if not data.get(f)]
           if missing:
               print(f"ERROR: Missing required fields in doc/info.json: {missing}", file=sys.stderr)
@@ -40,15 +40,20 @@ jobs:
           cat_path = Path("scripts/ip-categories.json")
           if cat_path.is_file():
               categories = json.loads(cat_path.read_text(encoding="utf-8"))
-              cat = data["category"]
-              subcat = data["subcategory"]
-              if cat not in categories:
-                  print(f"ERROR: Unknown category '{cat}'", file=sys.stderr)
+              name = data.get("name", "")
+              subcat_abbrev = "".join([c for c in name if c.isalpha()])
+              found = False
+              for c_name, subcats in categories.items():
+                  for s_full, s_abbrev in subcats.items():
+                      if s_abbrev == subcat_abbrev:
+                          print(f"Category verified from IP name '{name}': {c_name} -> {s_full} ({s_abbrev})")
+                          found = True
+                          break
+                  if found:
+                      break
+              if not found:
+                  print(f"ERROR: Unknown subcategory abbreviation '{subcat_abbrev}' from name '{name}'", file=sys.stderr)
                   sys.exit(1)
-              if subcat not in categories[cat]:
-                  print(f"ERROR: Unknown subcategory '{subcat}' in category '{cat}'", file=sys.stderr)
-                  sys.exit(1)
-              print(f"Category verified: {cat} -> {subcat} ({categories[cat][subcat]})")
 
           print("doc/info.json validation: SUCCESS!")
           PY
@@ -130,8 +135,13 @@ jobs:
       - name: Install KLayout
         shell: bash
         run: |
+          export DEBIAN_FRONTEND=noninteractive
+          sudo systemctl stop unattended-upgrades 2>/dev/null || true
           sudo apt-get update -y
-          sudo apt-get install -y klayout
+          sudo -E apt-get install -y --no-install-recommends \
+            -o Dpkg::Options::="--force-confdef" \
+            -o Dpkg::Options::="--force-confold" \
+            klayout
 
       - name: Run KLayout Verification Suite on Live GDS
         shell: bash

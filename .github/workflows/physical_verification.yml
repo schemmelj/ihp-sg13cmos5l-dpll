@@ -35,8 +35,13 @@ jobs:
       - name: Install system dependencies
         shell: bash
         run: |
-          sudo apt-get update -qq -y
-          sudo apt-get install -y jq klayout python3-pip
+          export DEBIAN_FRONTEND=noninteractive
+          sudo systemctl stop unattended-upgrades 2>/dev/null || true
+          sudo apt-get update -y
+          sudo -E apt-get install -y --no-install-recommends \
+            -o Dpkg::Options::="--force-confdef" \
+            -o Dpkg::Options::="--force-confold" \
+            jq klayout python3-pip
 
       - name: Resolve release inputs from doc/info.json
         id: resolve-inputs
